@@ -1,6 +1,8 @@
 # Wrapfully Client
 
-Sends a project's deploy folder and build configuration to a [Wrapfully](https://github.com/Makefully-Studios/wrapfully) build server.
+Zips your web build and configuration, POSTs them to a Wrapfully build server, and saves the platform build artifacts it returns to `./output/`.
+
+You provide the server address — typically a URL supplied by your team or hosting environment (for example `http://build.example.com:9630/`).
 
 ## Install
 
@@ -8,9 +10,22 @@ Sends a project's deploy folder and build configuration to a [Wrapfully](https:/
 npm install @makefully/wrapfully-client
 ```
 
+## Quick start
+
+1. Build your web app into a deploy folder (default: `./deploy/`, must include `index.html`).
+2. Add build configuration to `package.json` (see [Configuration](#configuration)).
+3. Add icons and any signing credentials under `./assets/meta/`.
+4. Deploy to your build server:
+
+```bash
+npx wrapfully-deploy android http://build.example.com:9630/
+```
+
+Build artifacts are written to `./output/`.
+
 ## Usage
 
-Run from your project root (where `package.json` and your deploy folder live):
+Run from your project root:
 
 ```bash
 npx wrapfully-deploy [builder] [server] [mode]
@@ -18,31 +33,312 @@ npx wrapfully-deploy [builder] [server] [mode]
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `builder` | `all` | Build target passed to the Wrapfully server (e.g. `android`, `ios`, `win`, `mac`) |
-| `server` | see below | Wrapfully server base URL |
-| `mode` | `extract` | `extract` writes the build response to `./output/`; any other value saves a zip file |
+| `builder` | `all` | Build target (see [Builders](#builders)). **Must be a valid builder name** — `all` is not a valid endpoint; always pass a platform. |
+| `server` | see below | Base URL of the build server |
+| `mode` | `extract` | `extract` unpacks the response zip into `./output/`; any other value saves `./output/{name}-{version}-{builder}.zip` |
 
-### Server URL
+Examples:
+
+```bash
+# Android release build
+npx wrapfully-deploy android http://build.example.com:9630/
+
+# Mac build using server from environment variable
+export WRAPFULLY_SERVER=http://build.example.com:9630/
+npx wrapfully-deploy mac
+
+# Save the response as a zip instead of extracting
+npx wrapfully-deploy win http://build.example.com:9630/ zip
+```
+
+Add scripts to your project's `package.json`:
+
+```json
+{
+  "scripts": {
+    "deploy:android": "wrapfully-deploy android",
+    "deploy:mac": "wrapfully-deploy mac"
+  }
+}
+```
+
+Set `WRAPFULLY_SERVER` or a `server` field in `wrapfully.json` so scripts do not need the address on every invocation.
+
+### Server address
 
 The server URL is resolved in this order:
 
-1. CLI argument (`server` above)
+1. CLI argument
 2. `WRAPFULLY_SERVER` environment variable
 3. `server` field in `wrapfully.json`
 4. `http://localhost:9630/`
 
-Do not commit server URLs, credentials, or other secrets to version control. Keep private infrastructure addresses in environment variables or local config files listed in `.gitignore`.
+Keep server addresses and credentials out of version control — use environment variables or a gitignored `wrapfully.json`.
 
-### wrapfully.json
+## What gets sent
 
-Optional project config merged into the package payload sent to the server:
+The client POSTs a zip stream to:
+
+```
+{server}{builder}/{name}-{version}
+```
+
+For example, a project named `mygame` at version `1.2.0` with builder `android`:
+
+```
+http://build.example.com:9630/android/mygame-1.2.0
+```
+
+The server extracts the zip, reads the embedded `package.json`, runs the build for that platform, and streams a zip of artifacts back to the client.
+
+### Zip contents
+
+| Archive path | Source on disk | Purpose |
+|--------------|----------------|---------|
+| `deploy/` | `{deployFolder}/` (default `./deploy/`) | Built web app (HTML, JS, assets) |
+| `deploy/index.html` | `{deployFolder}/index.html` | Entry point (also included via the directory) |
+| `meta/` | `./assets/meta/` (if present) | Icons, signing keys, and publish credentials |
+| `package.json` | project root | Merged `package.json` + `wrapfully.json` config |
+
+### Project layout
+
+```
+mygame/
+├── package.json          # npm metadata + config block (see below)
+├── wrapfully.json        # optional — merged into config
+├── deploy/               # built web app (or set deployFolder in config)
+│   └── index.html
+└── assets/
+    └── meta/             # packaged as meta/ in the zip
+        ├── icon-foreground.png
+        ├── icon-background.png
+        └── publish/      # platform signing & deploy credentials
+            ├── build.json
+            ├── android/
+            ├── apple.json
+            └── ...
+```
+
+Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile and desktop builds.
+
+## Configuration
+
+Build settings are read from `package.json`. The client merges any `wrapfully.json` fields into `package.json`'s `config` object before sending.
+
+### `package.json`
+
+Standard npm fields (`name`, `version`, `description`) are used directly. Add a `config` block:
 
 ```json
 {
-    "deployFolder": "deploy",
-    "server": "http://localhost:9630/"
+  "name": "mygame",
+  "version": "1.2.0",
+  "description": "My game",
+  "config": {
+    "title": "My Game",
+    "packageName": "com.example.mygame",
+    "publisherDisplayName": "Example Games",
+    "publisherFullName": "Example Games LLC",
+    "publisherWebsite": "https://example.com",
+    "publisherEmailAddress": "hello@example.com",
+    "scope": "https://example.com/games/",
+    "themeColor": "#1a1a2e",
+    "twitterId": "@examplegames",
+    "steamId": 1234567,
+    "properties": [
+      { "tag": "plugin", "name": "cordova-plugin-inappbrowser" },
+      { "tag": "allow-navigation", "href": "*" }
+    ]
+  }
 }
 ```
+
+| Field | Used by | Description |
+|-------|---------|-------------|
+| `title` | All | Display name shown in stores and app shells |
+| `packageName` | Cordova, Electron, UWP | Reverse-DNS identifier (`com.company.game`) |
+| `publisherDisplayName` | Cordova, Electron, web | Short publisher name |
+| `publisherFullName` | Electron | Legal entity name for copyright |
+| `publisherWebsite` | Cordova, web | Company URL |
+| `publisherEmailAddress` | Cordova | Contact email |
+| `scope` | Web/PWA | Base URL scope for the web app |
+| `themeColor` | Cordova, UWP, web | Loading screen / theme color |
+| `twitterId` | Web | Twitter handle for meta tags |
+| `steamId` | Steam | Steam app ID |
+| `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
+| `deployFolder` | Client | Deploy directory name (default: `deploy`) |
+
+### `wrapfully.json`
+
+Optional. Fields are shallow-merged into `package.json`'s `config`:
+
+```json
+{
+  "deployFolder": "dist",
+  "server": "http://build.example.com:9630/",
+  "title": "My Game",
+  "packageName": "com.example.mygame"
+}
+```
+
+Use this to set the server address or override config per environment without editing `package.json`.
+
+## Builders
+
+Each builder name becomes a path segment on the server. Some builds require a specific host OS on the server side; composite builders fan out to multiple platforms automatically.
+
+| Builder | Output |
+|---------|--------|
+| `android` | Release Android (.aab) |
+| `android-dev` | Debug Android (.apk) |
+| `ios` | Release iOS (.ipa) |
+| `ios-dev` | Debug iOS (.ipa) |
+| `ios-sim` | iOS Simulator (.app) |
+| `mac` | Release Mac (.app) |
+| `win` | Windows portable (.exe) |
+| `linux` | Linux build |
+| `uwp` | Universal Windows Package |
+| `webapp` | Service-worker web app (optionally SFTP deploy) |
+| `steam` | Windows + Mac + Linux, uploads to Steam |
+| `cordova` | Release Android + iOS |
+| `cordova-dev` | Debug Android + iOS |
+| `apple` | Release Mac + iOS |
+| `apple-dev` | Release Mac + debug iOS |
+
+For a single platform, pass the specific builder name rather than a composite.
+
+### Platform package requirements
+
+Signing keys, provisioning profiles, and store credentials go in `./assets/meta/publish/` on disk (sent as `meta/publish/` in the zip). **These files contain secrets** — add them to `.gitignore` and never commit them to a public repository.
+
+#### Android (`android`, `android-dev`)
+
+Place keystore files in `assets/meta/publish/android/`. Include `assets/meta/publish/build.json`:
+
+```json
+{
+  "android": {
+    "debug": {
+      "keystore": "./android/debug.keystore",
+      "packageType": "apk",
+      "storePassword": "android",
+      "alias": "androiddebugkey",
+      "password": "android",
+      "keystoreType": ""
+    },
+    "release": {
+      "keystore": "./android/release.keystore",
+      "packageType": "bundle",
+      "storePassword": "(your store password)",
+      "alias": "(your alias)",
+      "password": "(your password)",
+      "keystoreType": ""
+    }
+  }
+}
+```
+
+To deploy to Google Play, also include `assets/meta/publish/google.json`:
+
+```json
+{
+  "type": "service_account",
+  "project_id": "(your project id)",
+  "private_key_id": "(your private key id)",
+  "private_key": "(your private key)",
+  "client_email": "(your service account email)",
+  "client_id": "(your client id)",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "(your service account cert URL)"
+}
+```
+
+#### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`, `apple`, `apple-dev`)
+
+Include `assets/meta/publish/build.json` with iOS signing settings:
+
+```json
+{
+  "ios": {
+    "debug": {
+      "codeSignIdentity": "iPhone Development",
+      "provisioningProfile": "(your development provisioning profile id)",
+      "developmentTeam": "(your team id)",
+      "packageType": "development",
+      "automaticProvisioning": false
+    },
+    "release": {
+      "codeSignIdentity": "iPhone Distribution",
+      "provisioningProfile": "(your distribution provisioning profile id)",
+      "developmentTeam": "(your team id)",
+      "packageType": "app-store",
+      "automaticProvisioning": false
+    }
+  }
+}
+```
+
+To deploy to the App Store, include `assets/meta/publish/apple.json`:
+
+```json
+{
+  "category": "(your app's category)",
+  "identity": "(your team identity)",
+  "username": "(your username)",
+  "password": "(your password)"
+}
+```
+
+#### Cordova (`cordova`, `cordova-dev`)
+
+Requires the Android and Apple package requirements above.
+
+#### Steam (`steam`)
+
+Include `assets/meta/publish/steam.json`:
+
+```json
+{
+  "username": "(your username)",
+  "password": "(your password)"
+}
+```
+
+Also set `steamId` in your `config` block.
+
+#### Web app (`webapp`)
+
+To deploy via SFTP, include `assets/meta/publish/sftp.json`:
+
+```json
+{
+  "webapp": {
+    "host": "(your sftp host)",
+    "port": 22,
+    "user": "(your username)",
+    "password": "(your password)",
+    "path": "(the sftp subdirectory in which to publish the app)"
+  }
+}
+```
+
+#### Windows (`win`, `uwp`)
+
+To sign the app, place your certificate at `assets/meta/publish/ms/packcert.pfx` and include `assets/meta/publish/ms.json`:
+
+```json
+{
+  "publisherName": "CN=(your publisher id)",
+  "certificateFile": "./ms/packcert.pfx",
+  "password": "(your password)"
+}
+```
+
+## Response
+
+The server responds with a zip stream containing build artifacts (`.apk`, `.aab`, `.ipa`, `.app`, `.exe`, etc.) and optional status files. By default the client extracts this into `./output/`. Use a non-`extract` mode value to save the raw response zip instead.
 
 ## License
 
