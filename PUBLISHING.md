@@ -36,5 +36,6 @@ Run **Actions → Publish to npm → Run workflow** to publish the current `pack
 
 ## Requirements
 
-- npm CLI **11.5.1+** (provided by Node **24** in the workflow)
-- `package.json` `repository.url` must match the GitHub repo (`git+https://github.com/Makefully-Studios/wrapfully-client.git`)
+- npm CLI **11.5.1+** (workflow upgrades npm explicitly before publish)
+- `package.json` `repository.url` must match the GitHub repo (`https://github.com/Makefully-Studios/wrapfully-client.git`)
+- Your npm account must be an owner or member of the `@makefully` organization with publish access

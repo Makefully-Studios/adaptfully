@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.2 — 2026-06-12
+
+### Fixed
+
+- npm trusted publishing workflow: upgrade npm explicitly, unset stale `NODE_AUTH_TOKEN`, and use `https://` repository URL format required by OIDC.
+
 ## 1.1.1 — 2026-06-11
 
 ### Added

@@ -28,8 +28,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
+
+      - name: Upgrade npm for OIDC trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Check for version bump
         id: version
@@ -78,6 +82,16 @@ jobs:
             exit 1
           fi
 
+      - name: Verify OIDC token is available
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "OIDC token URL not available — check id-token: write permission."
+            exit 1
+          fi
+
       - name: Publish to npm
         if: steps.version.outputs.publish == 'true'
+        env:
+          NODE_AUTH_TOKEN: ''
         run: npm publish --provenance --access public
