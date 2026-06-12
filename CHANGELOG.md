@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.1 — 2026-06-11
+
+### Added
+
+- npm trusted publishing workflow (`.github/workflows/publish.yml`) with OIDC — no `NPM_TOKEN` required.
+- `PUBLISHING.md` maintainer guide; publishes automatically on version bumps to `main`.
+
 ## 1.1.0 — 2026-06-11
 
 ### Added

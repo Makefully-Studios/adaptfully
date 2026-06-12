@@ -1,6 +1,6 @@
 {
     "name": "@makefully/wrapfully-client",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Deploy client for the Wrapfully build server",
     "main": "deploy.js",
     "bin": {
@@ -35,7 +35,8 @@
     ],
     "license": "MIT",
     "publishConfig": {
-        "access": "public"
+        "access": "public",
+        "provenance": true
     },
     "engines": {
         "node": ">=14"

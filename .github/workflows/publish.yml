@@ -1,0 +1,83 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+      - package-lock.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Check for version bump
+        id: version
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view @makefully/wrapfully-client version 2>/dev/null || echo "")
+
+          if [ "$CURRENT" = "$PUBLISHED" ]; then
+            echo "Version $CURRENT is already on npm — skipping."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual run — publishing version $CURRENT."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            PREVIOUS=$(git show HEAD^:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          else
+            PREVIOUS=""
+          fi
+
+          if [ -n "$PREVIOUS" ] && [ "$CURRENT" = "$PREVIOUS" ]; then
+            echo "package.json changed but version is still $CURRENT — skipping."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Version bumped to $CURRENT — publishing."
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        if: steps.version.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Verify repository field
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          PKG_REPO=$(node -p "require('./package.json').repository.url.replace(/^git\\+/, '').replace(/^github:/, 'https://github.com/').replace(/\\.git$/, '').replace(/^https:\\/\\//, '')")
+          GIT_REPO="${{ github.repository }}"
+          if [ "$PKG_REPO" != "github.com/$GIT_REPO" ]; then
+            echo "package.json repository ($PKG_REPO) does not match GitHub repo (github.com/$GIT_REPO)"
+            exit 1
+          fi
+
+      - name: Publish to npm
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --provenance --access public

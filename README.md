@@ -10,6 +10,8 @@ You provide the server address — typically a URL supplied by your team or host
 npm install @makefully/wrapfully-client
 ```
 
+Maintainers: see [PUBLISHING.md](PUBLISHING.md) for npm trusted publishing setup.
+
 ## Quick start
 
 1. Build your web app into a deploy folder (default: `./deploy/`, must include `index.html`).
