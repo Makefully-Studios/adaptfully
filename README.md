@@ -119,7 +119,20 @@ mygame/
             └── ...
 ```
 
-Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile and desktop builds.
+Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile, desktop, and Steam builds.
+
+### Icons
+
+Place two layered PNG files in `./assets/meta/` (packaged as `meta/` in the zip):
+
+| File | Purpose |
+|------|---------|
+| `icon-foreground.png` | Foreground layer (typically the character or subject) |
+| `icon-background.png` | Background layer (typically the scene or environment) |
+
+The build server composites the foreground over the background, applies a binding/logo overlay, and generates the icon sizes each platform needs.
+
+**Recommended format:** 1536×1536 pixel square PNGs for both files. Images with other dimensions are scaled to 1536×1536 automatically, but matching the target size produces the sharpest results.
 
 ## Configuration
 
@@ -308,6 +321,10 @@ Include `assets/meta/publish/steam.json`:
 
 Also set `steamId` in your `config` block.
 
+Steam builds can run on either the Windows or Mac server. The server that receives the request builds its own platforms and requests the rest from the other server (Windows builds `win` and requests `mac`/`linux`; Mac builds `mac`/`linux` and requests `win`). Install the Steamworks SDK ContentBuilder on any server that will upload to Steam.
+
+When builds relay between servers, credentials in `assets/meta/publish/*.json` are forwarded automatically and take priority on the receiving server.
+
 #### Web app (`webapp`)
 
 To deploy via SFTP, include `assets/meta/publish/sftp.json`:
@@ -339,6 +356,8 @@ To sign the app, place your certificate at `assets/meta/publish/ms/packcert.pfx`
 ## Response
 
 The server responds with a zip stream containing build artifacts (`.apk`, `.aab`, `.ipa`, `.app`, `.exe`, etc.) and optional status files. By default the client extracts this into `./output/`. Use a non-`extract` mode value to save the raw response zip instead.
+
+Every build also includes `wrapfully-status.json` with structured `success`, `warn`, and `error` events. The client prints these after extraction and exits with code 1 if any errors were reported, so build failures do not crash the server silently.
 
 ## License
 

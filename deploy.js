@@ -41,6 +41,46 @@ const
 
         return archive;
     },
+    printBuildReport = function (builder, pkg) {
+        const
+            statusPath = './output/wrapfully-status.json',
+            legacyPath = `./output/${pkg.name}-${pkg.version}-${builder}.txt`;
+        let status = null;
+
+        if (fs.existsSync(statusPath)) {
+            try {
+                status = JSON.parse(fs.readFileSync(statusPath, 'utf8'));
+            } catch (err) {
+                console.warn('Unable to read wrapfully-status.json');
+            }
+        }
+
+        if (status) {
+            for (let i = 0; i < status.events.length; i++) {
+                const event = status.events[i],
+                    line = `[${event.step}] ${event.message}`;
+
+                if (event.level === 'error') {
+                    console.error(line);
+                } else if (event.level === 'warn') {
+                    console.warn(line);
+                } else {
+                    console.log(line);
+                }
+            }
+
+            if (!status.ok) {
+                console.error('Wrapfully build finished with errors.');
+                process.exit(1);
+            }
+
+            return;
+        }
+
+        if (fs.existsSync(legacyPath)) {
+            console.log(fs.readFileSync(legacyPath, 'utf8'));
+        }
+    },
     send = async function (gameId, contents, server, builder, deployFolder, pkg) {
         const
             dst = autoExtract === 'extract' ? unzipper.Extract({
@@ -53,20 +93,27 @@ const
                 responseType: 'stream'
             });
 
-        // listen for all archive data to be written
         archiveStream.on('close', function () {
             console.log('completed send');
         });
 
-        data.on('error', function (err) {
-            if (err.code === 'ECONNREFUSED') {
-                console.warn(`Cannot connect to Wrapfully server "${server}"`);
-            } else {
-                throw err;
-            }
+        await new Promise((resolve, reject) => {
+            data.on('error', function (err) {
+                if (err.code === 'ECONNREFUSED') {
+                    console.error(`Cannot connect to Wrapfully server "${server}"`);
+                    process.exit(1);
+                } else {
+                    reject(err);
+                }
+            });
+            dst.on('error', reject);
+            dst.on('close', resolve);
+            data.pipe(dst);
         });
 
-        data.pipe(dst);
+        if (autoExtract === 'extract') {
+            printBuildReport(builder, pkg);
+        }
     },
     args = process.argv,
     builder = args[2] ?? 'all',
