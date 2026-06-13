@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.2.0 — 2026-06-11
+
+### Added
+
+- Documentation for Electron debug builders: `win-dev`, `mac-dev`, `linux-dev`, and `steam-dev`.
+
 ## 1.1.2 — 2026-06-12
 
 ### Fixed

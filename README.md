@@ -210,11 +210,15 @@ Each builder name becomes a path segment on the server. Some builds require a sp
 | `ios-dev` | Debug iOS (.ipa) |
 | `ios-sim` | iOS Simulator (.app) |
 | `mac` | Release Mac (.app) |
+| `mac-dev` | Debug Mac (.app) with DevTools |
 | `win` | Windows portable (.exe) |
+| `win-dev` | Debug Windows portable with DevTools |
 | `linux` | Linux build |
+| `linux-dev` | Debug Linux build with DevTools |
 | `uwp` | Universal Windows Package |
 | `webapp` | Service-worker web app (optionally SFTP deploy) |
 | `steam` | Windows + Mac + Linux, uploads to Steam |
+| `steam-dev` | Debug Windows + Mac + Linux, no Steam upload |
 | `cordova` | Release Android + iOS |
 | `cordova-dev` | Debug Android + iOS |
 | `apple` | Release Mac + iOS |
@@ -310,9 +314,11 @@ To deploy to the App Store, include `assets/meta/publish/apple.json`:
 
 Requires the Android and Apple package requirements above.
 
-#### Steam (`steam`)
+#### Steam (`steam`, `steam-dev`)
 
-Include `assets/meta/publish/steam.json`:
+`steam-dev` builds debug Electron binaries for Windows, Mac, and Linux without uploading to Steam. No `steam.json` credentials are required.
+
+For release uploads, include `assets/meta/publish/steam.json`:
 
 ```json
 {
@@ -325,7 +331,13 @@ Also set `steamId` in your `config` block.
 
 Steam builds can run on either the Windows or Mac server. The server that receives the request builds its own platforms and requests the rest from the other server (Windows builds `win` and requests `mac`/`linux`; Mac builds `mac`/`linux` and requests `win`). Install the Steamworks SDK ContentBuilder on any server that will upload to Steam.
 
-When builds relay between servers, credentials in `assets/meta/publish/*.json` are forwarded automatically and take priority on the receiving server.
+When builds relay between servers, `meta/publish/` credentials travel in the zip with the game payload.
+
+#### Electron (`win`, `win-dev`, `mac`, `mac-dev`, `linux`, `linux-dev`, `steam`, `steam-dev`)
+
+`-dev` builders produce debug Electron apps with DevTools enabled and the application menu visible. Dev builds skip code signing, notarization, and Steam upload. No publish credentials are required for dev builds.
+
+Release `win` builds can be signed with `assets/meta/publish/ms.json` (see Windows below). Release `mac` builds can use `assets/meta/publish/apple.json` for signing and notarization (see Apple above).
 
 #### Web app (`webapp`)
 
@@ -343,7 +355,7 @@ To deploy via SFTP, include `assets/meta/publish/sftp.json`:
 }
 ```
 
-#### Windows (`win`, `uwp`)
+#### Windows (`win`, `win-dev`, `uwp`)
 
 To sign the app, place your certificate at `assets/meta/publish/ms/packcert.pfx` and include `assets/meta/publish/ms.json`:
 
