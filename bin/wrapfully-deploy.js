@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { deployFromCli } from './lib/node/deploy.js';
+import { deployFromCli } from '../lib/node/deploy.js';
 
 deployFromCli().catch((err) => {
     console.error(err);

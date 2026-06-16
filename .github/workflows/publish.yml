@@ -39,7 +39,7 @@ jobs:
         id: version
         run: |
           CURRENT=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view @makefully/wrapfully-client version 2>/dev/null || echo "")
+          PUBLISHED=$(npm view @makefully/adaptfully version 2>/dev/null || echo "")
 
           if [ "$CURRENT" = "$PUBLISHED" ]; then
             echo "Version $CURRENT is already on npm — skipping."
@@ -71,6 +71,10 @@ jobs:
       - name: Install dependencies
         if: steps.version.outputs.publish == 'true'
         run: npm ci
+
+      - name: Test
+        if: steps.version.outputs.publish == 'true'
+        run: npm test
 
       - name: Verify repository field
         if: steps.version.outputs.publish == 'true'

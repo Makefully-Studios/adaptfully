@@ -1,11 +1,11 @@
-# Publishing `@makefully/wrapfully-client`
+# Publishing `@makefully/adaptfully`
 
 This package uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC) from GitHub Actions. No long-lived `NPM_TOKEN` secret is required.
 
 ## One-time npm setup
 
-1. Sign in at [npmjs.com](https://www.npmjs.com/) as a maintainer of `@makefully/wrapfully-client`.
-2. Open **Packages → @makefully/wrapfully-client → Settings → Trusted publishing**.
+1. Sign in at [npmjs.com](https://www.npmjs.com/) as a maintainer of `@makefully/adaptfully`.
+2. Open **Packages → @makefully/adaptfully → Settings → Trusted publishing**.
 3. Select **GitHub Actions** and configure:
 
 | Field | Value |

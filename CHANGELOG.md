@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## 2.1.0 — 2026-06-15
+
+### Changed
+
+- Node tooling is now full ESM (`import`/`export`) with no `.cjs` / `.mjs` split.
+- Deploy logic split into focused modules: `archive.js`, `config.js`, `deploy.js`, `report.js`.
+- Runtime uses ES classes, private fields, optional chaining, and shared `auth/_helpers.js`.
+- Minimum Node version raised to 18; dependencies updated (`archiver` 7, `axios` 1.7).
+
+## 2.0.0 — 2026-06-15
+
+### Added
+
+- **Adaptfully** runtime library: `adaptfully.register()` / `adaptfully.get()` for platform services.
+- Auth plugins: Google (`adaptfully.auth.Google`), Steam (`adaptfully.auth.Steam`), and dev (`adaptfully.auth.Dev`).
+- `Platform` wrapper for uniform auth API across deployment channels.
+- Node build helpers: `getAuthScriptsForChannel()`, `authRegistrationScript()`, `filterIncludesForBuildChannel()`, and related exports.
+- Programmatic deploy API exported from `lib/node/deploy.js`.
+
+### Changed
+
+- Package renamed from `@makefully/wrapfully-client` to `@makefully/adaptfully`.
+- Deploy CLI moved to `bin/wrapfully-deploy.js`; root `deploy.js` remains as a compatibility shim.
+
 ## 1.2.0 — 2026-06-11
 
 ### Added

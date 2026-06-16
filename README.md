@@ -1,16 +1,68 @@
-# Wrapfully Client
+# Adaptfully
 
-Zips your web build and configuration, POSTs them to a Wrapfully build server, and saves the platform build artifacts it returns to `./output/`.
+Platform abstraction and Wrapfully deploy client for Makefully games.
 
-You provide the server address — typically a URL supplied by your team or hosting environment (for example `http://build.example.com:9630/`).
+- **Adaptfully runtime** — shared auth and platform services via `adaptfully.register()` / `adaptfully.get()`
+- **Wrapfully deploy** — zip-and-post CLI for building desktop, mobile, and Steam packages
 
 ## Install
 
 ```bash
-npm install @makefully/wrapfully-client
+npm install @makefully/adaptfully
 ```
 
 Maintainers: see [PUBLISHING.md](PUBLISHING.md) for npm trusted publishing setup.
+
+## Adaptfully runtime
+
+Games register platform services before load and retrieve them in-game. Auth is selected at **build time** by the game's build tooling — the game never chooses Google vs Steam directly.
+
+```javascript
+// Set by the build (before account.js loads):
+adaptfully.register('auth', adaptfully.auth.Google);
+
+// In-game:
+var platform = adaptfully.get('auth');
+platform.login(function (result) { /* ... */ });
+```
+
+### Auth plugins
+
+| Plugin | Registration | Used for |
+|--------|--------------|----------|
+| `adaptfully.auth.Google` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web, Android, iOS |
+| `adaptfully.auth.Steam` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron |
+| `adaptfully.auth.Dev` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local dev (test user) |
+
+Games can register shared dependencies before auth:
+
+```javascript
+adaptfully.register('storage', myStorage);
+adaptfully.register('config', {
+    googleClientId: '...',
+    googleTokenKey: 'mygame_google_token',
+    apiBase: 'https://api.example.com/',
+});
+```
+
+### Node build helpers
+
+```javascript
+import {
+    getAuthScriptsForChannel,
+    authRegistrationScript,
+    filterIncludesForBuildChannel,
+    extScriptsForBuildChannel,
+} from '@makefully/adaptfully';
+```
+
+`getAuthScriptsForChannel('web')` returns ordered runtime script paths. `authRegistrationScript('steam')` returns the inline registration snippet for that channel.
+
+---
+
+## Wrapfully deploy
+
+Zips your web build and configuration, POSTs them to a Wrapfully build server, and saves the platform build artifacts it returns to `./output/`.
 
 ## Quick start
 
