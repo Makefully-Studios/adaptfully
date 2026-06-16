@@ -11,7 +11,7 @@ This package uses [npm trusted publishing](https://docs.npmjs.com/trusted-publis
 | Field | Value |
 |-------|-------|
 | Organization or user | `Makefully-Studios` |
-| Repository | `wrapfully-client` |
+| Repository | `adaptfully` |
 | Workflow filename | `publish.yml` |
 | Environment | *(leave empty unless you add a GitHub environment)* |
 
@@ -37,5 +37,5 @@ Run **Actions → Publish to npm → Run workflow** to publish the current `pack
 ## Requirements
 
 - npm CLI **11.5.1+** (workflow upgrades npm explicitly before publish)
-- `package.json` `repository.url` must match the GitHub repo (`https://github.com/Makefully-Studios/wrapfully-client.git`)
+- `package.json` `repository.url` must match the GitHub repo (`https://github.com/Makefully-Studios/adaptfully.git`)
 - Your npm account must be an owner or member of the `@makefully` organization with publish access

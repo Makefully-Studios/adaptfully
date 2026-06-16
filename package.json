@@ -26,12 +26,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Makefully-Studios/wrapfully-client.git"
+        "url": "git+https://github.com/Makefully-Studios/adaptfully.git"
     },
     "bugs": {
-        "url": "https://github.com/Makefully-Studios/wrapfully-client/issues"
+        "url": "https://github.com/Makefully-Studios/adaptfully/issues"
     },
-    "homepage": "https://github.com/Makefully-Studios/wrapfully-client#readme",
+    "homepage": "https://github.com/Makefully-Studios/adaptfully#readme",
     "keywords": [
         "adaptfully",
         "wrapfully",
