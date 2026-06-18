@@ -107,6 +107,8 @@ import {
 - **`prebuildPlatform(deployFolder, platformKey, pkg)`** — copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` (default: `index.html`).
 - **`resolveRegistrationAssets(registrations)`** — resolve runtime script paths, inline registration JS, and external script tags for a registration map (useful for Vite dev servers).
 - **`runAdaptfullyStage('prebuild' | 'build' | 'deploy', platformKey, options)`** — run a pipeline stage programmatically.
+- **`platform.autoLogin(callback)`** — restore a prior session without UI when the auth plugin supports it (Google uses `lastLoggedIn` in storage and a cached OAuth token).
+- **`platform.supportsAutoLogin()`** — whether the active auth plugin can attempt automatic sign-in.
 
 ---
 

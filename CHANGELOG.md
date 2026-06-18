@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.0.3 — 2026-06-18
+
+### Added
+
+- `platform.autoLogin()` and `platform.supportsAutoLogin()` for session restore without UI.
+- Google auth reads `config.autoLoginStorageKey` (default: `lastLoggedIn`) when deciding whether to attempt silent OAuth.
+
+### Changed
+
+- Auth plugins expose `autoLogin()` only (removed `silentLogin()`).
+
+### Fixed
+
+- Google auth reads OAuth config and stored tokens lazily so bridge-registered `config`/`storage` are applied before auto-login runs.
+- Prebuild injects deploy bridge scripts after `core.js` and before auth plugin runtime scripts.
+- Auth storage helper falls back to `localStorage` when `storage` is not registered via Adaptfully.
+
 ## 3.0.2 — 2026-06-18
 
 ### Fixed

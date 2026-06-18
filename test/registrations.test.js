@@ -60,6 +60,17 @@ describe('registrations', () => {
         assert.doesNotMatch(injection, /src="\/javascript\/adaptfully-bridge\.js"/);
     });
 
+    it('loads deploy scripts after core and before auth plugins', () => {
+        const injection = buildAdaptfullyInjection({
+            auth: 'google-auth',
+            storage: 'javascript/adaptfully-bridge.js',
+        });
+        const coreIndex = injection.indexOf('class Adaptfully');
+        const bridgeIndex = injection.indexOf('<script src="javascript/adaptfully-bridge.js"></script>');
+        const googleIndex = injection.indexOf('registerGoogleAuth');
+        assert.ok(coreIndex >= 0 && bridgeIndex > coreIndex && googleIndex > bridgeIndex);
+    });
+
     it('replaces adaptfully marker block in html', () => {
         const html = '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>';
         const injection = buildAdaptfullyInjection({ auth: 'dev-auth' });
