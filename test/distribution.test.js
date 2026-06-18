@@ -31,6 +31,13 @@ describe('registration assets', () => {
         assert.match(assets.inlineScript, /adaptfully\.auth\.Steam/);
     });
 
+    it('preserves page-relative deploy script srcs', () => {
+        const assets = resolveRegistrationAssets({
+            storage: 'javascript/adaptfully-bridge.js',
+        });
+        assert.deepEqual(assets.deployScriptSrcs, ['javascript/adaptfully-bridge.js']);
+    });
+
     it('exposes standard plugin keys', () => {
         assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), ['dev-auth', 'google-auth', 'steam-auth']);
     });

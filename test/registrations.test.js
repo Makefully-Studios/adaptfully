@@ -52,6 +52,14 @@ describe('registrations', () => {
         ]);
     });
 
+    it('builds injection for page-relative deploy script', () => {
+        const injection = buildAdaptfullyInjection({
+            storage: 'javascript/adaptfully-bridge.js',
+        });
+        assert.match(injection, /<script src="javascript\/adaptfully-bridge\.js"><\/script>/);
+        assert.doesNotMatch(injection, /src="\/javascript\/adaptfully-bridge\.js"/);
+    });
+
     it('replaces adaptfully marker block in html', () => {
         const html = '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>';
         const injection = buildAdaptfullyInjection({ auth: 'dev-auth' });

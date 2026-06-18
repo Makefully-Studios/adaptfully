@@ -68,7 +68,7 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
       "web": {
         "registrations": {
           "auth": "google-auth",
-          "storage": "/javascript/adaptfully-bridge.js"
+          "storage": "javascript/adaptfully-bridge.js"
         }
       },
       "dev": {
@@ -81,7 +81,7 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
 }
 ```
 
-Standard plugin keys load bundled Adaptfully runtime scripts and emit an inline `adaptfully.register()` call. Path values add a `<script src="...">` tag — the script is expected to call `adaptfully.register()` itself (for example a bridge that wires `storage` and `config`).
+Standard plugin keys load bundled Adaptfully runtime scripts and emit an inline `adaptfully.register()` call. Path values add a `<script src="...">` tag — the script is expected to call `adaptfully.register()` itself (for example a bridge that wires `storage` and `config`). Use a leading `/` for site-root URLs; omit it for paths relative to each HTML page (required when the game is hosted in a subdirectory).
 
 Wrapfully builders (`steam`, `win`, `mac`, `android`, etc.) map to platform keys via defaults (`win` → `steam`) or an explicit `builders` array on the platform config.
 
@@ -284,13 +284,13 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
       "web": {
         "registrations": {
           "auth": "google-auth",
-          "storage": "/javascript/adaptfully-bridge.js"
+          "storage": "javascript/adaptfully-bridge.js"
         }
       },
       "steam": {
         "registrations": {
           "auth": "steam-auth",
-          "storage": "/javascript/adaptfully-bridge.js"
+          "storage": "javascript/adaptfully-bridge.js"
         }
       }
     },

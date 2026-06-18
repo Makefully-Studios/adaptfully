@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.0.2 — 2026-06-18
+
+### Fixed
+
+- Deploy script paths without a leading `/` are emitted as page-relative `script src` values (for subdirectory hosting).
+
 ## 3.0.1 — 2026-06-17
 
 ### Added
