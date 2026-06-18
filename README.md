@@ -45,6 +45,21 @@ const platform = adaptfully.get('auth');
 platform.login(function (result) { /* ... */ });
 ```
 
+### Storage plugins
+
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `localStorage` | `adaptfully.register('storage', adaptfully.storage.LocalStorage())` | Sync key/value storage in the browser |
+| `indexedDB` | `adaptfully.register('storage', adaptfully.storage.IndexedDB())` | Async key/value storage for larger payloads |
+
+In-game:
+
+```javascript
+const storage = adaptfully.get('storage');
+storage.set('playerName', 'Ada');
+storage.getObject('currentGame');
+```
+
 ### Auth plugins
 
 | Plugin key | Registration | Runtime |
@@ -61,18 +76,19 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
     "platforms": {
       "steam": {
         "registrations": {
-          "auth": "steam-auth",
-          "storage": "/javascript/custom-storage-solution.js"
+          "storage": "localStorage",
+          "auth": "steam-auth"
         }
       },
       "web": {
         "registrations": {
-          "auth": "google-auth",
-          "storage": "javascript/adaptfully-bridge.js"
+          "storage": "localStorage",
+          "auth": "google-auth"
         }
       },
       "dev": {
         "registrations": {
+          "storage": "localStorage",
           "auth": "dev-auth"
         }
       }

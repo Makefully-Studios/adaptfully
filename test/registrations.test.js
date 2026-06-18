@@ -63,12 +63,13 @@ describe('registrations', () => {
     it('loads deploy scripts after core and before auth plugins', () => {
         const injection = buildAdaptfullyInjection({
             auth: 'google-auth',
-            storage: 'javascript/adaptfully-bridge.js',
+            storage: 'localStorage',
+            config: 'javascript/adaptfully-config.js',
         });
         const coreIndex = injection.indexOf('class Adaptfully');
-        const bridgeIndex = injection.indexOf('<script src="javascript/adaptfully-bridge.js"></script>');
+        const configIndex = injection.indexOf('<script src="javascript/adaptfully-config.js"></script>');
         const googleIndex = injection.indexOf('registerGoogleAuth');
-        assert.ok(coreIndex >= 0 && bridgeIndex > coreIndex && googleIndex > bridgeIndex);
+        assert.ok(coreIndex >= 0 && configIndex > coreIndex && googleIndex > configIndex);
     });
 
     it('replaces adaptfully marker block in html', () => {

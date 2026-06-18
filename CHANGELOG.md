@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.1.0 — 2026-06-18
+
+### Added
+
+- Built-in storage plugins: `localStorage` (sync) and `indexedDB` (async).
+- Register with `"storage": "localStorage"` or `"storage": "indexedDB"` in `config.platforms.<platform>.registrations`.
+
+### Changed
+
+- Auth helpers use registered `storage` only (no implicit fallbacks).
+
 ## 3.0.3 — 2026-06-18
 
 ### Added
