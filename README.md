@@ -28,7 +28,7 @@ adaptfully deploy steam     # build + platform release when credentials are pres
 
 | Stage | What it does |
 |-------|----------------|
-| `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations |
+| `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
 | `build` | Prebuild, then POST the result to Wrapfully |
 | `deploy` | Build, then release to the target platform (Steam upload, webapp SFTP, etc. via Wrapfully when credentials are in `assets/meta/publish/`) |
 
@@ -41,7 +41,7 @@ Place `<!-- adaptfully -->` / `<!-- /adaptfully -->` markers in your HTML templa
 adaptfully.register('auth', adaptfully.auth.Google);
 
 // In-game:
-var platform = adaptfully.get('auth');
+const platform = adaptfully.get('auth');
 platform.login(function (result) { /* ... */ });
 ```
 
@@ -90,6 +90,7 @@ Wrapfully builders (`steam`, `win`, `mac`, `android`, etc.) map to platform keys
 ```javascript
 import {
     prebuildPlatform,
+    resolveHtmlInjections,
     runAdaptfullyStage,
     buildAdaptfullyInjection,
     injectAdaptfullyRegistrations,
@@ -103,7 +104,7 @@ import {
 } from '@makefully/adaptfully';
 ```
 
-- **`prebuildPlatform(deployFolder, platformKey, pkg)`** — copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into all HTML files.
+- **`prebuildPlatform(deployFolder, platformKey, pkg)`** — copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` (default: `index.html`).
 - **`resolveRegistrationAssets(registrations)`** — resolve runtime script paths, inline registration JS, and external script tags for a registration map (useful for Vite dev servers).
 - **`runAdaptfullyStage('prebuild' | 'build' | 'deploy', platformKey, options)`** — run a pipeline stage programmatically.
 
@@ -139,7 +140,7 @@ npx adaptfully <prebuild|build|deploy> <platform> [server] [mode]
 
 | Stage | Description |
 |-------|-------------|
-| `prebuild` | Copy `deploy/` → `output/<platform>-prebuild/` with registrations injected |
+| `prebuild` | Copy `deploy/` → `output/<platform>-prebuild/` with registrations injected into `config.htmlInjections` |
 | `build` | Prebuild, then POST to Wrapfully (no platform release) |
 | `deploy` | Prebuild, POST to Wrapfully, then release when credentials are present |
 
@@ -314,6 +315,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `twitterId` | Web | Twitter handle for meta tags |
 | `steamId` | Steam | Steam app ID |
 | `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
+| `htmlInjections` | Prebuild | Deploy-relative HTML paths to inject (default: `["index.html"]`) |
 | `outputFolder` | Client | Prebuild output root (default: `output`) |
 | `platforms` | Prebuild | Per-platform registration maps (see [Adaptfully runtime](#adaptfully-runtime)) |
 | `platforms.<name>.builder` | Build/deploy | Override Wrapfully builder for a platform (default: `web` → `webapp`, others match platform key) |

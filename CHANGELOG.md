@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.0.1 — 2026-06-17
+
+### Added
+
+- `config.htmlInjections` — list of deploy-relative HTML paths to inject during prebuild (default: `["index.html"]`).
+
+### Fixed
+
+- Prebuild injects only configured HTML files instead of scanning every `.html` in the deploy folder.
+
 ## 3.0.0 — 2026-06-17
 
 ### Added
