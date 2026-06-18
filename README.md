@@ -65,7 +65,7 @@ storage.getObject('currentGame');
 | Plugin key | Registration | Runtime |
 |------------|--------------|---------|
 | `google-auth` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web, Android, iOS |
-| `steam-auth` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron |
+| `steam-auth` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron (via [steamworks.js](https://github.com/ceifa/steamworks.js)) |
 | `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local dev (test user) |
 
 Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy scripts use a path relative to the deploy folder instead:
@@ -100,6 +100,40 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
 Standard plugin keys load bundled Adaptfully runtime scripts and emit an inline `adaptfully.register()` call. Path values add a `<script src="...">` tag — the script is expected to call `adaptfully.register()` itself (for example a bridge that wires `storage` and `config`). Use a leading `/` for site-root URLs; omit it for paths relative to each HTML page (required when the game is hosted in a subdirectory).
 
 Wrapfully builders (`steam`, `win`, `mac`, `android`, etc.) map to platform keys via defaults (`win` → `steam`) or an explicit `builders` array on the platform config.
+
+Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or eventually `capacitor`). Defaults to **`web`** — copy deploy and inject HTML only. **`electron`** adds `main.js` from `lib/templates/electron/` during prebuild. **`steam-auth` requires `packager: "electron"`** and `config.steamId`.
+
+```json
+{
+  "config": {
+    "steamId": 719140,
+    "platforms": {
+      "web": {
+        "packager": "web",
+        "registrations": { "auth": "google-auth" }
+      },
+      "steam": {
+        "packager": "electron",
+        "registrations": { "auth": "steam-auth" }
+      }
+    }
+  }
+}
+```
+
+#### Steam auth (`steam-auth`)
+
+When `steam-auth` is registered on an **`electron`** platform, Adaptfully prebuild writes:
+
+- **`main.js`** — Electron shell with Steam overlay enabled and a preload script wired in
+- **`preload.js`** — initializes [steamworks.js](https://github.com/ceifa/steamworks.js) with `config.steamId` and exposes `window.__ADAPTFULLY_STEAMWORKS__`
+
+The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam is available, `autoLogin()` succeeds immediately with `{ id: steamId64, email: '' }`. Optional config keys:
+
+| Key | Default | Purpose |
+|-----|---------|---------|
+| `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the Steam ID on login |
+| `steamReadyTimeoutMs` | `10000` | Max wait when a bridge exists but identity is not yet ready |
 
 ### Node API
 
@@ -306,6 +340,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
         }
       },
       "steam": {
+        "packager": "electron",
         "registrations": {
           "auth": "steam-auth",
           "storage": "javascript/adaptfully-bridge.js"
@@ -338,6 +373,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms` | Prebuild | Per-platform registration maps (see [Adaptfully runtime](#adaptfully-runtime)) |
 | `platforms.<name>.builder` | Build/deploy | Override Wrapfully builder for a platform (default: `web` → `webapp`, others match platform key) |
 | `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
+| `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — controls template files added during prebuild |
 | `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
 
 ### `wrapfully.json`

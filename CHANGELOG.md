@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.2.0 — 2026-06-16
+
+### Added
+
+- **`config.platforms.<platform>.packager`** — `web` (default), `electron`, `cordova`, or `capacitor`. Controls which template files are added during prebuild.
+- **`lib/templates/`** — packager-specific templates (starting with `electron/main.js` and `electron/preload.js`).
+- Electron prebuild writes **`main.js`** automatically. When **`steam-auth`** is registered, Adaptfully also writes **`preload.js`** with steamworks.js init and overlay setup in `main.js`.
+- **`steam-auth` requires `packager: "electron"`** — prebuild throws if steam-auth is used on a non-electron platform or without `config.steamId`.
+
+## 3.1.1 — 2026-06-16
+
+### Added
+
+- **steam-auth** integrates with [steamworks.js](https://github.com/ceifa/steamworks.js): reads Steam ID and persona name from shell-provided bridges (`__ADAPTFULLY_STEAMWORKS__`, `steamworks`, `electronAPI`).
+- Steam auth supports `autoLogin()` and `supportsAutoLogin()` when the Steam client is available.
+
 ## 3.1.0 — 2026-06-18
 
 ### Added
