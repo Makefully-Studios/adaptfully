@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.0.0 — 2026-06-17
+
+### Added
+
+- Three-stage Adaptfully pipeline: `adaptfully prebuild`, `adaptfully build`, and `adaptfully deploy`.
+- `prebuildPlatform()` copies `deploy/` to `output/<platform>-prebuild/` and applies platform registrations to all HTML files.
+- `adaptfully` CLI binary (`adaptfully prebuild|build|deploy <platform>`).
+- Config-driven platform registrations via `config.platforms.<platform>.registrations` in `package.json`.
+- Platform APIs: `adaptfullyInjectionForPlatform()`, `resolveRegistrationAssets()`, `resolveBuilderForPlatform()`, `resolveCliPlatformAndBuilder()`.
+
+### Changed
+
+- `wrapfully-deploy` runs the `deploy` stage (prebuild + Wrapfully upload). Builder names (`win`, `steam`, etc.) map to platform keys via `config.platforms` or defaults.
+- `build` and `deploy` stages always prebuild first; the on-disk `deploy/` folder is left unchanged.
+- Missing platform registrations skip injection with a console note; each registration is logged as it is applied.
+
+### Removed
+
+- Legacy channel-based build helpers: `getBuildChannel`, `getAuthScriptsForChannel`, `authRegistrationScript`, `authRegistrationForChannel`, `devAuthRegistration`, `extScriptsForBuildChannel`, `filterIncludesForBuildChannel`, `distributionSettingsForBuild`.
+- Deprecated builder-based injection helpers: `adaptfullyInjectionForBuilder`, `prepareDeployIndexHtml`, `deployFromCli`.
+- `adaptfully.getInstance()` from the browser runtime.
+- Root `deploy.js` compatibility shim.
+
 ## 2.1.0 — 2026-06-15
 
 ### Changed

@@ -1,6 +1,6 @@
 {
     "name": "@makefully/adaptfully",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "description": "Platform abstraction and Wrapfully deploy client for Makefully games",
     "type": "module",
     "main": "./lib/node/index.js",
@@ -11,6 +11,7 @@
         "./package.json": "./package.json"
     },
     "bin": {
+        "adaptfully": "bin/adaptfully.js",
         "wrapfully-deploy": "bin/wrapfully-deploy.js"
     },
     "files": [

@@ -3,7 +3,8 @@
 Platform abstraction and Wrapfully deploy client for Makefully games.
 
 - **Adaptfully runtime** — shared auth and platform services via `adaptfully.register()` / `adaptfully.get()`
-- **Wrapfully deploy** — zip-and-post CLI for building desktop, mobile, and Steam packages
+- **Adaptfully pipeline** — prebuild, build, and deploy stages driven by `config.platforms`
+- **Wrapfully deploy** — zip-and-post client for building desktop, mobile, and Steam packages
 
 ## Install
 
@@ -15,10 +16,28 @@ Maintainers: see [PUBLISHING.md](PUBLISHING.md) for npm trusted publishing setup
 
 ## Adaptfully runtime
 
-Games register platform services before load and retrieve them in-game. Auth is selected at **build time** by the game's build tooling — the game never chooses Google vs Steam directly.
+Games register platform services before load and retrieve them in-game. Adaptfully applies platform registrations during **prebuild** — games compile a neutral `deploy/` folder, then Adaptfully writes `output/<platform>-prebuild/` with the correct auth and plugin scripts injected into HTML.
+
+### Pipeline stages
+
+```bash
+adaptfully prebuild web     # deploy/ → output/web-prebuild/
+adaptfully build steam      # prebuild + zip and send to Wrapfully
+adaptfully deploy steam     # build + platform release when credentials are present
+```
+
+| Stage | What it does |
+|-------|----------------|
+| `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations |
+| `build` | Prebuild, then POST the result to Wrapfully |
+| `deploy` | Build, then release to the target platform (Steam upload, webapp SFTP, etc. via Wrapfully when credentials are in `assets/meta/publish/`) |
+
+`wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
+
+Place `<!-- adaptfully -->` / `<!-- /adaptfully -->` markers in your HTML templates where registrations should be injected (typically between split bundle scripts, before `account.js` runs).
 
 ```javascript
-// Set by the build (before account.js loads):
+// Injected into deploy/index.html for the target platform (before game code):
 adaptfully.register('auth', adaptfully.auth.Google);
 
 // In-game:
@@ -28,81 +47,119 @@ platform.login(function (result) { /* ... */ });
 
 ### Auth plugins
 
-| Plugin | Registration | Used for |
-|--------|--------------|----------|
-| `adaptfully.auth.Google` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web, Android, iOS |
-| `adaptfully.auth.Steam` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron |
-| `adaptfully.auth.Dev` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local dev (test user) |
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `google-auth` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web, Android, iOS |
+| `steam-auth` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron |
+| `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local dev (test user) |
 
-Games can register shared dependencies before auth:
+Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy scripts use a path relative to the deploy folder instead:
 
-```javascript
-adaptfully.register('storage', myStorage);
-adaptfully.register('config', {
-    googleClientId: '...',
-    googleTokenKey: 'mygame_google_token',
-    apiBase: 'https://api.example.com/',
-});
+```json
+{
+  "config": {
+    "platforms": {
+      "steam": {
+        "registrations": {
+          "auth": "steam-auth",
+          "storage": "/javascript/custom-storage-solution.js"
+        }
+      },
+      "web": {
+        "registrations": {
+          "auth": "google-auth",
+          "storage": "/javascript/adaptfully-bridge.js"
+        }
+      },
+      "dev": {
+        "registrations": {
+          "auth": "dev-auth"
+        }
+      }
+    }
+  }
+}
 ```
 
-### Node build helpers
+Standard plugin keys load bundled Adaptfully runtime scripts and emit an inline `adaptfully.register()` call. Path values add a `<script src="...">` tag — the script is expected to call `adaptfully.register()` itself (for example a bridge that wires `storage` and `config`).
+
+Wrapfully builders (`steam`, `win`, `mac`, `android`, etc.) map to platform keys via defaults (`win` → `steam`) or an explicit `builders` array on the platform config.
+
+### Node API
 
 ```javascript
 import {
-    getAuthScriptsForChannel,
-    authRegistrationScript,
-    filterIncludesForBuildChannel,
-    extScriptsForBuildChannel,
+    prebuildPlatform,
+    runAdaptfullyStage,
+    buildAdaptfullyInjection,
+    injectAdaptfullyRegistrations,
+    adaptfullyInjectionForPlatform,
+    resolveRegistrationAssets,
+    resolvePlatformKey,
+    resolveBuilderForPlatform,
+    getRuntimeDir,
+    resolveRuntimeScript,
+    STANDARD_PLUGINS,
 } from '@makefully/adaptfully';
 ```
 
-`getAuthScriptsForChannel('web')` returns ordered runtime script paths. `authRegistrationScript('steam')` returns the inline registration snippet for that channel.
+- **`prebuildPlatform(deployFolder, platformKey, pkg)`** — copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into all HTML files.
+- **`resolveRegistrationAssets(registrations)`** — resolve runtime script paths, inline registration JS, and external script tags for a registration map (useful for Vite dev servers).
+- **`runAdaptfullyStage('prebuild' | 'build' | 'deploy', platformKey, options)`** — run a pipeline stage programmatically.
 
 ---
 
 ## Wrapfully deploy
 
-Zips your web build and configuration, POSTs them to a Wrapfully build server, and saves the platform build artifacts it returns to `./output/`.
+After prebuild, the build and deploy stages zip `output/<platform>-prebuild/` and POST it to a Wrapfully build server. Artifacts are saved to `./output/`.
 
 ## Quick start
 
-1. Build your web app into a deploy folder (default: `./deploy/`, must include `index.html`).
-2. Add build configuration to `package.json` (see [Configuration](#configuration)).
+1. Build your web app into a neutral deploy folder (default: `./deploy/`, must include `index.html` with adaptfully markers).
+2. Add `config.platforms` and other settings to `package.json` (see [Configuration](#configuration)).
 3. Add icons and any signing credentials under `./assets/meta/`.
-4. Deploy to your build server:
+4. Prebuild for your target platform, then build or deploy:
 
 ```bash
-npx wrapfully-deploy android http://build.example.com:9630/
+npx adaptfully prebuild web
+npx adaptfully deploy steam http://build.example.com:9630/
 ```
 
-Build artifacts are written to `./output/`.
+For web-only hosting (no Wrapfully), stop after prebuild and upload `output/web-prebuild/` yourself.
 
 ## Usage
+
+### Adaptfully CLI
 
 Run from your project root:
 
 ```bash
-npx wrapfully-deploy [builder] [server] [mode]
+npx adaptfully <prebuild|build|deploy> <platform> [server] [mode]
 ```
+
+| Stage | Description |
+|-------|-------------|
+| `prebuild` | Copy `deploy/` → `output/<platform>-prebuild/` with registrations injected |
+| `build` | Prebuild, then POST to Wrapfully (no platform release) |
+| `deploy` | Prebuild, POST to Wrapfully, then release when credentials are present |
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `builder` | `all` | Build target (see [Builders](#builders)). **Must be a valid builder name** — `all` is not a valid endpoint; always pass a platform. |
-| `server` | see below | Base URL of the build server |
+| `platform` | — | Platform key from `config.platforms` (`web`, `steam`, etc.) |
+| `server` | see below | Wrapfully server base URL (`build` and `deploy` only) |
 | `mode` | `extract` | `extract` unpacks the response zip into `./output/`; any other value saves `./output/{name}-{version}-{builder}.zip` |
 
 Examples:
 
 ```bash
-# Android release build
-npx wrapfully-deploy android http://build.example.com:9630/
+# Prebuild for web (upload output/web-prebuild/ via FTP, S3, etc.)
+npx adaptfully prebuild web
 
-# Mac build using server from environment variable
-export WRAPFULLY_SERVER=http://build.example.com:9630/
-npx wrapfully-deploy mac
+# Build for Steam via Wrapfully
+npx adaptfully build steam http://build.example.com:9630/
 
-# Save the response as a zip instead of extracting
-npx wrapfully-deploy win http://build.example.com:9630/ zip
+# Full Steam deploy (build + upload when steam.json credentials are present)
+npx adaptfully deploy steam http://build.example.com:9630/
 ```
 
 Add scripts to your project's `package.json`:
@@ -110,13 +167,19 @@ Add scripts to your project's `package.json`:
 ```json
 {
   "scripts": {
-    "deploy:android": "wrapfully-deploy android",
-    "deploy:mac": "wrapfully-deploy mac"
+    "web:prebuild": "adaptfully prebuild web",
+    "steam:deploy": "adaptfully deploy steam"
   }
 }
 ```
 
-Set `WRAPFULLY_SERVER` or a `server` field in `wrapfully.json` so scripts do not need the address on every invocation.
+### wrapfully-deploy (legacy alias)
+
+```bash
+npx wrapfully-deploy [builder] [server] [mode]
+```
+
+Accepts Wrapfully builder names (`steam`, `win`, `mac`, `android`, `webapp`, etc.) instead of platform keys. Maps to the matching `config.platforms` entry (defaults: `win` → `steam`, `webapp` → `web`) and runs the `deploy` stage.
 
 ### Server address
 
@@ -131,7 +194,7 @@ Keep server addresses and credentials out of version control — use environment
 
 ## What gets sent
 
-The client POSTs a zip stream to:
+The client POSTs a zip stream built from `output/<platform>-prebuild/` to:
 
 ```
 {server}{builder}/{name}-{version}
@@ -149,8 +212,8 @@ The server extracts the zip, reads the embedded `package.json`, runs the build f
 
 | Archive path | Source on disk | Purpose |
 |--------------|----------------|---------|
-| `deploy/` | `{deployFolder}/` (default `./deploy/`) | Built web app (HTML, JS, assets) |
-| `deploy/index.html` | `{deployFolder}/index.html` | Entry point (also included via the directory) |
+| `deploy/` | prebuilt `output/<platform>-prebuild/` | Built web app with Adaptfully registrations injected |
+| `deploy/index.html` | prebuilt entry point | Platform-specific HTML |
 | `meta/` | `./assets/meta/` (if present) | Icons, signing keys, and publish credentials |
 | `package.json` | project root | Merged `package.json` + `wrapfully.json` config |
 
@@ -158,10 +221,13 @@ The server extracts the zip, reads the embedded `package.json`, runs the build f
 
 ```
 mygame/
-├── package.json          # npm metadata + config block (see below)
+├── package.json          # npm metadata + config.platforms (see below)
 ├── wrapfully.json        # optional — merged into config
-├── deploy/               # built web app (or set deployFolder in config)
+├── deploy/               # neutral build output (default deployFolder)
 │   └── index.html
+├── output/
+│   ├── web-prebuild/     # after adaptfully prebuild web
+│   └── steam-prebuild/   # after adaptfully prebuild steam
 └── assets/
     └── meta/             # packaged as meta/ in the zip
         ├── icon-foreground.png
@@ -212,6 +278,21 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
     "themeColor": "#1a1a2e",
     "twitterId": "@examplegames",
     "steamId": 1234567,
+    "deployFolder": "deploy",
+    "platforms": {
+      "web": {
+        "registrations": {
+          "auth": "google-auth",
+          "storage": "/javascript/adaptfully-bridge.js"
+        }
+      },
+      "steam": {
+        "registrations": {
+          "auth": "steam-auth",
+          "storage": "/javascript/adaptfully-bridge.js"
+        }
+      }
+    },
     "properties": [
       { "tag": "plugin", "name": "cordova-plugin-inappbrowser" },
       { "tag": "allow-navigation", "href": "*" }
@@ -232,8 +313,12 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `themeColor` | Cordova, UWP, web | Loading screen / theme color |
 | `twitterId` | Web | Twitter handle for meta tags |
 | `steamId` | Steam | Steam app ID |
+| `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
+| `outputFolder` | Client | Prebuild output root (default: `output`) |
+| `platforms` | Prebuild | Per-platform registration maps (see [Adaptfully runtime](#adaptfully-runtime)) |
+| `platforms.<name>.builder` | Build/deploy | Override Wrapfully builder for a platform (default: `web` → `webapp`, others match platform key) |
+| `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
 | `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
-| `deployFolder` | Client | Deploy directory name (default: `deploy`) |
 
 ### `wrapfully.json`
 
