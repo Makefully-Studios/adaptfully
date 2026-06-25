@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.4.0 — 2026-06-25
+
+### Changed
+
+- Electron **`main.js`** allows same-app `file://` navigation while still opening external http(s) links in the system browser.
+- Steam builds (`steam-auth`) set renderer **`sandbox: false`** so the steamworks preload bridge can reach the main process; non-Steam Electron builds keep `sandbox: true`.
+
 ## 3.3.0 — 2026-06-23
 
 ### Added

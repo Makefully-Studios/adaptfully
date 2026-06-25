@@ -77,6 +77,10 @@ describe('packagers', () => {
         const withSteam = buildElectronMain(true);
         assert.match(withSteam, /electronEnableSteamOverlay/);
         assert.match(withSteam, /preload: path\.join\(__dirname, 'preload\.js'\)/);
+        assert.match(withSteam, /sandbox: false/);
+        assert.doesNotMatch(withoutSteam, /sandbox: false/);
+        assert.match(withoutSteam, /sandbox: true/);
+        assert.match(withSteam, /url\.startsWith\('file:'\)/);
     });
 
     it('collects used standard plugins across targeted platforms', () => {
