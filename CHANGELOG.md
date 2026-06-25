@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.3.0 — 2026-06-23
+
+### Added
+
+- **Packager classes** — `Packager`, `WebPackager`, `ElectronPackager`, `CordovaPackager`, and `CapacitorPackager` encapsulate per-packager prebuild behavior behind a shared API (`validate`, `applyTemplates`, `applyHtmlExtras`, `prebuild`).
+- **`createPackagerForPlatform(platformKey, pkg, options)`** — factory that resolves the configured packager and returns an instance. Options include `platforms` (target platform keys, e.g. `ios` + `android` for Cordova) and `platformKey` (active prebuild platform).
+- **Plugin detection** — `collectUsedPlugins()` and `usesPlugin(id)` inspect standard Adaptfully auth/storage registrations across targeted platforms so packagers can adapt output (e.g. Electron injects steamworks init when `steam-auth` is registered).
+- **Cordova prebuild** — writes `cordova.js` stub, injects CSP/viewport meta tags and `game-config.js` script tags into HTML.
+- **`buildElectronMain()` / `buildElectronPreload()`** — exported helpers that compose Electron shell files (used by `ElectronPackager` and available for tests or extensions).
+
+### Changed
+
+- Prebuild runs packager work through a single `packager.prebuild(dest, htmlPaths)` call instead of separate template/HTML helper functions.
+- Electron **`main.js`** and **`preload.js`** are composed from embedded strings in `ElectronPackager` rather than read from disk templates.
+- **`web`** packager writes **`game-config.js`** during prebuild when the platform key is **`uwp`**.
+
+### Removed
+
+- **`lib/templates/`** — packager output is generated in code; no template files are shipped with the package.
+- **`getTemplatesDir()`**, **`resolvePackagerTemplateDir()`**, and **`applyTemplateMarker()`** from the public API.
+
 ## 3.2.0 — 2026-06-16
 
 ### Added

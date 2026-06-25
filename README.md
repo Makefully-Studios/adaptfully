@@ -101,7 +101,16 @@ Standard plugin keys load bundled Adaptfully runtime scripts and emit an inline 
 
 Wrapfully builders (`steam`, `win`, `mac`, `android`, etc.) map to platform keys via defaults (`win` → `steam`) or an explicit `builders` array on the platform config.
 
-Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or eventually `capacitor`). Defaults to **`web`** — copy deploy and inject HTML only. **`electron`** adds `main.js` from `lib/templates/electron/` during prebuild. **`steam-auth` requires `packager: "electron"`** and `config.steamId`.
+Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `capacitor`). Defaults to **`web`** — copy deploy and inject HTML only. Packagers are implemented as classes (`WebPackager`, `ElectronPackager`, `CordovaPackager`, `CapacitorPackager`) that handle prebuild output for their target platforms.
+
+| Packager | Prebuild adds |
+|----------|---------------|
+| `web` | `game-config.js` for **`uwp`** platform prebuilds |
+| `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** is registered |
+| `cordova` | `cordova.js` stub, `game-config.js`, CSP/viewport HTML extras |
+| `capacitor` | `game-config.js` (more Capacitor-specific output planned) |
+
+**`steam-auth` requires `packager: "electron"`** and `config.steamId`.
 
 ```json
 {
@@ -140,6 +149,7 @@ The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam
 ```javascript
 import {
     prebuildPlatform,
+    createPackagerForPlatform,
     resolveHtmlInjections,
     runAdaptfullyStage,
     buildAdaptfullyInjection,
@@ -155,6 +165,7 @@ import {
 ```
 
 - **`prebuildPlatform(deployFolder, platformKey, pkg)`** — copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` (default: `index.html`).
+- **`createPackagerForPlatform(platformKey, pkg, { platforms, log })`** — get a packager instance for custom prebuild or future build/deploy integration. The instance exposes `usesPlugin('steam-auth')`, `collectUsedPlugins()`, and `prebuild(dest, htmlPaths)`.
 - **`resolveRegistrationAssets(registrations)`** — resolve runtime script paths, inline registration JS, and external script tags for a registration map (useful for Vite dev servers).
 - **`runAdaptfullyStage('prebuild' | 'build' | 'deploy', platformKey, options)`** — run a pipeline stage programmatically.
 - **`platform.autoLogin(callback)`** — restore a prior session without UI when the auth plugin supports it (Google uses `lastLoggedIn` in storage and a cached OAuth token).
@@ -373,7 +384,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms` | Prebuild | Per-platform registration maps (see [Adaptfully runtime](#adaptfully-runtime)) |
 | `platforms.<name>.builder` | Build/deploy | Override Wrapfully builder for a platform (default: `web` → `webapp`, others match platform key) |
 | `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
-| `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — controls template files added during prebuild |
+| `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
 | `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
 
 ### `wrapfully.json`
