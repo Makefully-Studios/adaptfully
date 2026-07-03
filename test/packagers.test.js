@@ -69,12 +69,13 @@ describe('packagers', () => {
     });
 
     it('composes electron main.js with optional steam sections', () => {
-        const withoutSteam = buildElectronMain(false);
+        const withoutSteam = buildElectronMain(false, '#1a1a2e');
         assert.match(withoutSteam, /BrowserWindow/);
+        assert.match(withoutSteam, /backgroundColor: "#1a1a2e"/);
         assert.doesNotMatch(withoutSteam, /electronEnableSteamOverlay/);
         assert.doesNotMatch(withoutSteam, /preload\.js/);
 
-        const withSteam = buildElectronMain(true);
+        const withSteam = buildElectronMain(true, '#1a1a2e');
         assert.match(withSteam, /electronEnableSteamOverlay/);
         assert.match(withSteam, /preload: path\.join\(__dirname, 'preload\.js'\)/);
         assert.match(withSteam, /sandbox: false/);
@@ -144,6 +145,7 @@ describe('prebuild packager templates', () => {
 
         const pkg = {
             config: {
+                themeColor: '#1a1a2e',
                 platforms: {
                     desktop: {
                         packager: 'electron',
@@ -159,6 +161,7 @@ describe('prebuild packager templates', () => {
         assert.ok(fs.existsSync(mainPath));
         const main = fs.readFileSync(mainPath, 'utf8');
         assert.match(main, /BrowserWindow/);
+        assert.match(main, /backgroundColor: "#1a1a2e"/);
         assert.doesNotMatch(main, /adaptfully-steam-init/);
         assert.doesNotMatch(main, /preload\.js/);
     });

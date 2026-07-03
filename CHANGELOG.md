@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.5.0 — 2026-06-27
+
+### Added
+
+- **`adaptfully steam-auth`** — installs steamcmd if missing, runs an interactive login, and writes `assets/meta/publish/steam.json` with `configVdf` and optional `ssfn` sentry data for Steam Guard accounts.
+- Exported helpers: `runSteamAuth`, `buildSteamPublishJson`, `collectSteamAuthFiles`, `ensureSteamcmd`.
+
 ## 3.4.0 — 2026-06-25
 
 ### Changed

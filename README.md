@@ -24,6 +24,7 @@ Games register platform services before load and retrieve them in-game. Adaptful
 adaptfully prebuild web     # deploy/ → output/web-prebuild/
 adaptfully build steam      # prebuild + zip and send to Wrapfully
 adaptfully deploy steam     # build + platform release when credentials are present
+adaptfully steam-auth       # one-time: log in with steamcmd → assets/meta/publish/steam.json
 ```
 
 | Stage | What it does |
@@ -31,6 +32,7 @@ adaptfully deploy steam     # build + platform release when credentials are pres
 | `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
 | `build` | Prebuild, then POST the result to Wrapfully |
 | `deploy` | Build, then release to the target platform (Steam upload, webapp SFTP, etc. via Wrapfully when credentials are in `assets/meta/publish/`) |
+| `steam-auth` | One-time local setup: install steamcmd, interactive login, write `assets/meta/publish/steam.json` |
 
 `wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
 
@@ -199,6 +201,7 @@ Run from your project root:
 
 ```bash
 npx adaptfully <prebuild|build|deploy> <platform> [server] [mode]
+npx adaptfully steam-auth [--username U] [--password P] [--output path]
 ```
 
 | Stage | Description |
@@ -375,7 +378,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `publisherWebsite` | Cordova, web | Company URL |
 | `publisherEmailAddress` | Cordova | Contact email |
 | `scope` | Web/PWA | Base URL scope for the web app |
-| `themeColor` | Cordova, UWP, web | Loading screen / theme color |
+| `themeColor` | Cordova, Electron, UWP, web | Loading screen / theme color |
 | `twitterId` | Web | Twitter handle for meta tags |
 | `steamId` | Steam | Steam app ID |
 | `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
@@ -522,14 +525,21 @@ Requires the Android and Apple package requirements above.
 
 `steam-dev` builds debug Electron binaries for Windows, Mac, and Linux without uploading to Steam. No `steam.json` credentials are required.
 
-For release uploads, include `assets/meta/publish/steam.json`:
+For release uploads, run **`adaptfully steam-auth`** once on your machine. It installs steamcmd if needed, logs you in interactively (enter a Steam Guard code if prompted), and writes `assets/meta/publish/steam.json`:
 
 ```json
 {
-  "username": "(your username)",
-  "password": "(your password)"
+  "username": "(your Steam build account)",
+  "password": "(your password)",
+  "configVdf": "(base64 login token from steamcmd)",
+  "sentryFileName": "(only when Steam Guard is enabled)",
+  "sentryFile": "(base64 ssfn file — only when Steam Guard is enabled)"
 }
 ```
+
+Accounts **without** Steam Guard only need `username`, `password`, and `configVdf`. Accounts **with** Steam Guard also include the `ssfn` sentry file so the Wrapfully server can log in without a live 2FA prompt.
+
+Re-run `adaptfully steam-auth` if Steam invalidates the token (new machine, password change, or expired guard).
 
 Also set `steamId` in your `config` block.
 
