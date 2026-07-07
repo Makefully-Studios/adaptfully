@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.6.1 — 2026-07-06
+
+### Changed
+
+- Web deploy uses the same Wrapfully zip-and-post path as Steam (`webapp` builder). Adaptfully does not implement SFTP or other publish targets directly — credentials in `assets/meta/publish/` travel in the zip for Wrapfully to use.
+
 ## 3.5.0 — 2026-06-27
 
 ### Added

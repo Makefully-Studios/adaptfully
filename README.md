@@ -23,7 +23,8 @@ Games register platform services before load and retrieve them in-game. Adaptful
 ```bash
 adaptfully prebuild web     # deploy/ → output/web-prebuild/
 adaptfully build steam      # prebuild + zip and send to Wrapfully
-adaptfully deploy steam     # build + platform release when credentials are present
+adaptfully deploy web      # prebuild + POST to Wrapfully webapp builder (SFTP when sftp.json is in the zip)
+adaptfully deploy steam    # prebuild + POST to Wrapfully steam builder
 adaptfully steam-auth       # one-time: log in with steamcmd → assets/meta/publish/steam.json
 ```
 
@@ -31,7 +32,7 @@ adaptfully steam-auth       # one-time: log in with steamcmd → assets/meta/pub
 |-------|----------------|
 | `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
 | `build` | Prebuild, then POST the result to Wrapfully |
-| `deploy` | Build, then release to the target platform (Steam upload, webapp SFTP, etc. via Wrapfully when credentials are in `assets/meta/publish/`) |
+| `deploy` | Prebuild, zip, POST to Wrapfully; platform release when credentials are in `assets/meta/publish/` |
 | `steam-auth` | One-time local setup: install steamcmd, interactive login, write `assets/meta/publish/steam.json` |
 
 `wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
@@ -553,21 +554,27 @@ When builds relay between servers, `meta/publish/` credentials travel in the zip
 
 Release `win` builds can be signed with `assets/meta/publish/ms.json` (see Windows below). Release `mac` builds can use `assets/meta/publish/apple.json` for signing and notarization (see Apple above).
 
-#### Web app (`webapp`)
+#### Web (`web` / `webapp`)
 
-To deploy via SFTP, include `assets/meta/publish/sftp.json`:
+`adaptfully deploy web` prebuilds and POSTs to the Wrapfully **`webapp`** builder (same conduit as Steam). Include `assets/meta/publish/sftp.json` in the project so it is zipped as `meta/publish/sftp.json` for Wrapfully to deploy via SFTP.
 
 ```json
 {
   "webapp": {
     "host": "(your sftp host)",
     "port": 22,
-    "user": "(your username)",
+    "username": "(your username)",
     "password": "(your password)",
-    "path": "(the sftp subdirectory in which to publish the app)"
+    "path": "/home/user/example.com.incoming",
+    "uploadMode": "direct",
+    "serviceWorker": false,
+    "metaWeb": false,
+    "cleanRemote": false
   }
 }
 ```
+
+See [Wrapfully README](https://github.com/Makefully-Studios/wrapfully-client) for `uploadMode`, `serviceWorker`, `metaWeb`, and `cleanRemote`.
 
 #### Windows (`win`, `win-dev`, `uwp`)
 
