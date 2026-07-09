@@ -36,6 +36,7 @@ Run **Actions → Publish to npm → Run workflow** to publish the current `pack
 
 ## Requirements
 
-- npm CLI **11.5.1+** (workflow upgrades npm explicitly before publish)
+- npm CLI **11.5.1+** for trusted publishing (workflow uses `npx npm@11.8.0` — avoid `npm install -g npm@latest` on GHA runners; it can break the bundled npm with `MODULE_NOT_FOUND`)
+- `setup-node` must set `registry-url: https://registry.npmjs.org` so OIDC auth is wired correctly
 - `package.json` `repository.url` must match the GitHub repo (`https://github.com/Makefully-Studios/adaptfully.git`)
 - Your npm account must be an owner or member of the `@makefully` organization with publish access

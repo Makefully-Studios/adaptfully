@@ -28,12 +28,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
-
-      - name: Upgrade npm for OIDC trusted publishing
-        run: |
-          npm install -g npm@latest
-          npm --version
 
       - name: Check for version bump
         id: version
@@ -98,4 +94,7 @@ jobs:
         if: steps.version.outputs.publish == 'true'
         env:
           NODE_AUTH_TOKEN: ''
-        run: npm publish --provenance --access public
+        # npm's in-place self-upgrade (`npm install -g npm@latest`) can corrupt
+        # the bundled install (MODULE_NOT_FOUND for sigstore/promise-retry).
+        # Run a pinned npm from npx instead; 11.5.1+ is required for OIDC TP.
+        run: npx -y npm@11.8.0 publish --provenance --access public
