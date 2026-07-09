@@ -21,21 +21,43 @@ Games register platform services before load and retrieve them in-game. Adaptful
 ### Pipeline stages
 
 ```bash
-adaptfully prebuild web     # deploy/ → output/web-prebuild/
-adaptfully build steam      # prebuild + zip and send to Wrapfully
-adaptfully deploy web      # prebuild + POST to Wrapfully webapp builder (SFTP when sftp.json is in the zip)
-adaptfully deploy steam    # prebuild + POST to Wrapfully steam builder
-adaptfully steam-auth       # one-time: log in with steamcmd → assets/meta/publish/steam.json
+adaptfully prebuild web                       # deploy/ → output/web-prebuild/
+adaptfully build steam                        # prebuild + zip and send to Wrapfully (default deployment)
+adaptfully deploy web                         # prebuild + POST to Wrapfully for each of web's deployments
+adaptfully deploy web --deployment web-prod   # deploy to a single named deployment
+adaptfully deploy steam                       # prebuild + POST to Wrapfully steam builder
+adaptfully steam-auth                         # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
 ```
 
 | Stage | What it does |
 |-------|----------------|
 | `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
-| `build` | Prebuild, then POST the result to Wrapfully |
-| `deploy` | Prebuild, zip, POST to Wrapfully; platform release when credentials are in `assets/meta/publish/` |
-| `steam-auth` | One-time local setup: install steamcmd, interactive login, write `assets/meta/publish/steam.json` |
+| `build` | Prebuild, then POST the result to Wrapfully (the platform's default/first deployment only) |
+| `deploy` | Prebuild, zip, POST to Wrapfully once per deployment; platform release when credentials are in the deployment folder |
+| `steam-auth` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` |
 
 `wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
+
+### Platforms vs. deployments
+
+A **platform** (`config.platforms.<key>`) describes *how* to build — registrations, packager, and the Wrapfully builder. A **deployment** describes *where* a build is sent, along with the credentials for that target. This lets a single build fan out to several targets of the same platform type (for example, a staging and a production SFTP host).
+
+- A platform may declare `"deployments": ["<key>", ...]`. Each key maps to a credential folder at `assets/meta/deployments/<key>/`.
+- If a platform has no `deployments` array, the platform key itself is the single default deployment key (so `steam` → `assets/meta/deployments/steam/`).
+- `adaptfully deploy <platform>` prebuilds once, then sends to Wrapfully once per deployment. `--deployment <key>` narrows it to one.
+- Only the selected deployment's folder is shipped in each zip (as `meta/publish/`), so other targets' credentials never travel with a build.
+
+```json
+"config": {
+  "platforms": {
+    "web":       { "registrations": { "auth": "google-auth" }, "deployments": ["web-testing", "web-prod"] },
+    "steam":     { "packager": "electron", "registrations": { "auth": "steam-auth" } },
+    "steam-dev": { "packager": "electron", "registrations": { "auth": "steam-auth" }, "deployments": ["steam"] }
+  }
+}
+```
+
+> **Back-compat:** projects with no `assets/meta/deployments/` directory keep the legacy behavior — the entire `assets/meta/` tree (including `assets/meta/publish/`) is shipped as `meta/`, and a single set of credentials is read from `meta/publish/`.
 
 Place `<!-- adaptfully -->` / `<!-- /adaptfully -->` markers in your HTML templates where registrations should be injected (typically between split bundle scripts, before `account.js` runs).
 
@@ -297,15 +319,19 @@ mygame/
 │   ├── web-prebuild/     # after adaptfully prebuild web
 │   └── steam-prebuild/   # after adaptfully prebuild steam
 └── assets/
-    └── meta/             # packaged as meta/ in the zip
+    └── meta/                    # shared files packaged as meta/ in the zip
         ├── icon-foreground.png
         ├── icon-background.png
-        └── publish/      # platform signing & deploy credentials
-            ├── build.json
-            ├── android/
-            ├── apple.json
-            └── ...
+        └── deployments/         # one folder per deployment target (creds)
+            ├── web-testing/
+            │   └── sftp.json
+            ├── web-prod/
+            │   └── sftp.json
+            └── steam/           # default deployment for the `steam` platform
+                └── steam.json
 ```
+
+The selected deployment's folder is shipped as `meta/publish/` in the zip, so per-platform credential file names (`build.json`, `sftp.json`, `steam.json`, `apple.json`, `google.json`, `ms.json`, `android/`, `ms/`) live inside `assets/meta/deployments/<key>/`.
 
 Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile, desktop, and Steam builds.
 
@@ -436,11 +462,11 @@ For a single platform, pass the specific builder name rather than a composite.
 
 ### Platform package requirements
 
-Signing keys, provisioning profiles, and store credentials go in `./assets/meta/publish/` on disk (sent as `meta/publish/` in the zip). **These files contain secrets** — add them to `.gitignore` and never commit them to a public repository.
+Signing keys, provisioning profiles, and store credentials go in the deployment folder `./assets/meta/deployments/<deployment>/` on disk (the selected deployment is sent as `meta/publish/` in the zip). The examples below use `<deployment>` as a placeholder for the target key (e.g. `steam`, `web-prod`). **These files contain secrets** — add them to `.gitignore` and never commit them to a public repository. (Projects that have not adopted the `deployments/` layout may still place these under the legacy `./assets/meta/publish/`.)
 
 #### Android (`android`, `android-dev`)
 
-Place keystore files in `assets/meta/publish/android/`. Include `assets/meta/publish/build.json`:
+Place keystore files in `assets/meta/deployments/<deployment>/android/`. Include `assets/meta/deployments/<deployment>/build.json`:
 
 ```json
 {
@@ -465,7 +491,7 @@ Place keystore files in `assets/meta/publish/android/`. Include `assets/meta/pub
 }
 ```
 
-To deploy to Google Play, also include `assets/meta/publish/google.json`:
+To deploy to Google Play, also include `assets/meta/deployments/<deployment>/google.json`:
 
 ```json
 {
@@ -484,7 +510,7 @@ To deploy to Google Play, also include `assets/meta/publish/google.json`:
 
 #### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`, `apple`, `apple-dev`)
 
-Include `assets/meta/publish/build.json` with iOS signing settings:
+Include `assets/meta/deployments/<deployment>/build.json` with iOS signing settings:
 
 ```json
 {
@@ -507,7 +533,7 @@ Include `assets/meta/publish/build.json` with iOS signing settings:
 }
 ```
 
-To deploy to the App Store, include `assets/meta/publish/apple.json`:
+To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.json`:
 
 ```json
 {
@@ -526,7 +552,7 @@ Requires the Android and Apple package requirements above.
 
 `steam-dev` builds debug Electron binaries for Windows, Mac, and Linux without uploading to Steam. No `steam.json` credentials are required.
 
-For release uploads, run **`adaptfully steam-auth`** once on your machine. It installs steamcmd if needed, logs you in interactively (enter a Steam Guard code if prompted), and writes `assets/meta/publish/steam.json`:
+For release uploads, run **`adaptfully steam-auth`** once on your machine. It installs steamcmd if needed, logs you in interactively (enter a Steam Guard code if prompted), and writes `assets/meta/deployments/steam/steam.json`:
 
 ```json
 {
@@ -552,11 +578,11 @@ When builds relay between servers, `meta/publish/` credentials travel in the zip
 
 `-dev` builders produce debug Electron apps with DevTools enabled and the application menu visible. Dev builds skip code signing, notarization, and Steam upload. No publish credentials are required for dev builds.
 
-Release `win` builds can be signed with `assets/meta/publish/ms.json` (see Windows below). Release `mac` builds can use `assets/meta/publish/apple.json` for signing and notarization (see Apple above).
+Release `win` builds can be signed with `assets/meta/deployments/<deployment>/ms.json` (see Windows below). Release `mac` builds can use `assets/meta/deployments/<deployment>/apple.json` for signing and notarization (see Apple above).
 
 #### Web (`web` / `webapp`)
 
-`adaptfully deploy web` prebuilds and POSTs to the Wrapfully **`webapp`** builder (same conduit as Steam). Include `assets/meta/publish/sftp.json` in the project so it is zipped as `meta/publish/sftp.json` for Wrapfully to deploy via SFTP.
+`adaptfully deploy web` prebuilds and POSTs to the Wrapfully **`webapp`** builder (same conduit as Steam). Put an `sftp.json` in each web deployment folder (e.g. `assets/meta/deployments/web-prod/sftp.json`); the selected deployment is zipped as `meta/publish/sftp.json` for Wrapfully to deploy via SFTP. The inner key stays the builder name (`webapp`).
 
 ```json
 {
@@ -578,7 +604,7 @@ See [Wrapfully README](https://github.com/Makefully-Studios/wrapfully-client) fo
 
 #### Windows (`win`, `win-dev`, `uwp`)
 
-To sign the app, place your certificate at `assets/meta/publish/ms/packcert.pfx` and include `assets/meta/publish/ms.json`:
+To sign the app, place your certificate at `assets/meta/deployments/<deployment>/ms/packcert.pfx` and include `assets/meta/deployments/<deployment>/ms.json`:
 
 ```json
 {

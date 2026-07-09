@@ -1,11 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import {
     buildAdaptfullyInjection,
     injectAdaptfullyRegistrations,
     adaptfullyInjectionForPlatform,
+    resolveBuildSpec,
+    resolveDeploymentsForPlatform,
     resolvePlatformKey,
     resolvePlatformRegistrationsByKey,
+    resolvePublishDir,
 } from '../lib/node/registrations.js';
 
 describe('registrations', () => {
@@ -116,5 +120,54 @@ describe('registrations', () => {
             platformKey: 'steam',
             registrations: null,
         });
+    });
+
+    it('defaults deployments to zip when none are declared', () => {
+        const pkg = { config: { platforms: { steam: { registrations: {} } } } };
+        assert.deepEqual(resolveDeploymentsForPlatform('steam', pkg), ['zip']);
+    });
+
+    it('resolves declared deployments for a platform', () => {
+        const pkg = { config: { platforms: { web: { deployments: ['web-testing', 'web-prod'] } } } };
+        assert.deepEqual(resolveDeploymentsForPlatform('web', pkg), ['web-testing', 'web-prod']);
+    });
+
+    it('falls back to zip for an unknown platform', () => {
+        assert.deepEqual(resolveDeploymentsForPlatform('web', { config: { platforms: {} } }), ['zip']);
+    });
+
+    it('rejects invalid deployment entries', () => {
+        const pkg = { config: { platforms: { web: { deployments: [''] } } } };
+        assert.throws(() => resolveDeploymentsForPlatform('web', pkg), /non-empty strings/);
+    });
+
+    it('resolves build spec for multi-target steam platform', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    steam: {
+                        packager: 'electron',
+                        builder: ['win', 'mac', 'linux'],
+                        steamworks: true,
+                        deployments: ['zip', 'steam'],
+                    },
+                },
+            },
+        };
+
+        assert.deepEqual(resolveBuildSpec('steam', pkg), {
+            family: 'electron',
+            targets: ['win', 'mac', 'linux'],
+            platformKey: 'steam',
+            steamworks: true,
+            deployments: ['zip', 'steam'],
+        });
+    });
+
+    it('resolves a deployment publish directory under assets/meta/deployments', () => {
+        assert.equal(
+            resolvePublishDir('web-prod'),
+            path.join('assets/meta', 'deployments', 'web-prod'),
+        );
     });
 });

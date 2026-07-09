@@ -13,7 +13,7 @@ describe('steam-auth', () => {
     it('defaults steam.json output path', () => {
         assert.equal(
             defaultSteamPublishPath('/project'),
-            path.resolve('/project', 'assets', 'meta', 'publish', 'steam.json'),
+            path.resolve('/project', 'assets', 'meta', 'deployments', 'steam', 'steam.json'),
         );
     });
 

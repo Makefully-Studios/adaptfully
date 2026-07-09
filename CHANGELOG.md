@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.7.0 — 2026-07-09
+
+### Added
+
+- **`adaptfully release <platform>`** stage — single Wrapfully call for build + configured deployments.
+- **`resolveBuildSpec()`** — returns `{ family, targets, platformKey, steamworks, deployments }` for multi-target platforms.
+- **`createSourceArchive`**, **`createDeployArchive`**, **`createReleaseArchive`** — split zip profiles for build/deploy/release.
+- **`--artifact <path>`** on deploy for promoting a prior build artifact.
+
+### Changed
+
+- **`send()`** targets Wrapfully v2 URLs: `/{family}/build`, `/{family}/release`, `/deploy/{key}`.
+- Default **`deployments`** when omitted is `["zip"]` instead of the platform key.
+- **`builder`** in platform config may be a string or array (e.g. `["win","mac","linux"]`).
+
 ## 3.6.1 — 2026-07-06
 
 ### Changed
