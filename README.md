@@ -135,12 +135,11 @@ Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `
 | `cordova` | `cordova.js` stub, `game-config.js`, CSP/viewport HTML extras |
 | `capacitor` | `game-config.js` (more Capacitor-specific output planned) |
 
-**`steam-auth` requires `packager: "electron"`** and `config.steamId`.
+**`steam-auth` requires `packager: "electron"`** and `platforms.<name>.steamId` (Steamworks app ID for the client preload). Steam **upload** app IDs live separately in each Steam deployment’s `manifest.json` — see Wrapfully docs.
 
 ```json
 {
   "config": {
-    "steamId": 719140,
     "platforms": {
       "web": {
         "packager": "web",
@@ -148,6 +147,7 @@ Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `
       },
       "steam": {
         "packager": "electron",
+        "steamId": 1234567,
         "registrations": { "auth": "steam-auth" }
       }
     }
@@ -160,7 +160,7 @@ Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `
 When `steam-auth` is registered on an **`electron`** platform, Adaptfully prebuild writes:
 
 - **`main.js`** — Electron shell with Steam overlay enabled and a preload script wired in
-- **`preload.js`** — initializes [steamworks.js](https://github.com/ceifa/steamworks.js) with `config.steamId` and exposes `window.__ADAPTFULLY_STEAMWORKS__`
+- **`preload.js`** — initializes [steamworks.js](https://github.com/ceifa/steamworks.js) with `platforms.<name>.steamId` and exposes `window.__ADAPTFULLY_STEAMWORKS__`
 
 The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam is available, `autoLogin()` succeeds immediately with `{ id: steamId64, email: '' }`. Optional config keys:
 
@@ -371,7 +371,6 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
     "scope": "https://example.com/games/",
     "themeColor": "#1a1a2e",
     "twitterId": "@examplegames",
-    "steamId": 1234567,
     "deployFolder": "deploy",
     "platforms": {
       "web": {
@@ -382,6 +381,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
       },
       "steam": {
         "packager": "electron",
+        "steamId": 1234567,
         "registrations": {
           "auth": "steam-auth",
           "storage": "javascript/adaptfully-bridge.js"
@@ -407,7 +407,6 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `scope` | Web/PWA | Base URL scope for the web app |
 | `themeColor` | Cordova, Electron, UWP, web | Loading screen / theme color |
 | `twitterId` | Web | Twitter handle for meta tags |
-| `steamId` | Steam | Steam app ID |
 | `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
 | `htmlInjections` | Prebuild | Deploy-relative HTML paths to inject (default: `["index.html"]`) |
 | `outputFolder` | Client | Prebuild output root (default: `output`) |
@@ -415,6 +414,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.builder` | Build/deploy | Override Wrapfully builder for a platform (default: `web` → `webapp`, others match platform key) |
 | `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
 | `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
+| `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
 | `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
 
 ### `wrapfully.json`
@@ -568,7 +568,7 @@ Accounts **without** Steam Guard only need `username`, `password`, and `configVd
 
 Re-run `adaptfully steam-auth` if Steam invalidates the token (new machine, password change, or expired guard).
 
-Also set `steamId` in your `config` block.
+For Steamworks / `steam-auth` client builds, set `platforms.<name>.steamId`. For Steam **uploads**, set `steamId` on the deployment’s `manifest.json` (see Wrapfully). Those are independent: you can deploy without steam-auth, or use steam-auth without uploading.
 
 Steam builds can run on either the Windows or Mac server. The server that receives the request builds its own platforms and requests the rest from the other server (Windows builds `win` and requests `mac`/`linux`; Mac builds `mac`/`linux` and requests `win`). Install the Steamworks SDK ContentBuilder on any server that will upload to Steam.
 

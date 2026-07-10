@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.8.0 — 2026-07-10
+
+### Changed
+
+- **`steam-auth` Steamworks app ID** moves from top-level `config.steamId` to **`platforms.<name>.steamId`**. Steam **upload** app IDs belong in each deployment’s `manifest.json` (Wrapfully), not in Adaptfully client config.
+
 ## 3.7.0 — 2026-07-09
 
 ### Added

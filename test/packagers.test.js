@@ -40,9 +40,9 @@ describe('packagers', () => {
         assert.throws(
             () => validatePlatformPackager('steam', {
                 config: {
-                    steamId: 719140,
                     platforms: {
                         steam: {
+                            steamId: 719140,
                             registrations: { auth: 'steam-auth' },
                         },
                     },
@@ -64,7 +64,7 @@ describe('packagers', () => {
                     },
                 },
             }),
-            /steamId is not set/,
+            /platforms\.steam\.steamId is not set/,
         );
     });
 
@@ -113,10 +113,10 @@ describe('packagers', () => {
     it('detects steam-auth on the active platform for electron', () => {
         const pkg = {
             config: {
-                steamId: 719140,
                 platforms: {
                     steam: {
                         packager: 'electron',
+                        steamId: 719140,
                         registrations: { auth: 'steam-auth' },
                     },
                 },
@@ -175,10 +175,10 @@ describe('prebuild packager templates', () => {
 
         const pkg = {
             config: {
-                steamId: 719140,
                 platforms: {
                     steam: {
                         packager: 'electron',
+                        steamId: 719140,
                         registrations: { auth: 'steam-auth' },
                     },
                 },
