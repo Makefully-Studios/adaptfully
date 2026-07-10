@@ -32,8 +32,8 @@ adaptfully steam-auth                         # one-time: log in with steamcmd â
 | Stage | What it does |
 |-------|----------------|
 | `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
-| `build` | Prebuild, then POST the result to Wrapfully (the platform's default/first deployment only) |
-| `deploy` | Prebuild, zip, POST to Wrapfully once per deployment; platform release when credentials are in the deployment folder |
+| `build` | Prebuild, then POST the result to Wrapfully (artifact zip only) |
+| `deploy` | POST the prior build artifact from `./output/` to each configured deployment (or `--deployment`) |
 | `steam-auth` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` |
 
 `wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
