@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.8.2 — 2026-07-14
+
+### Fixed
+
+- **Release/deploy zips** resolve `assets/meta` and deployment credential dirs to absolute POSIX paths before `archiver.directory()`, and log which deployments were packaged (or skipped). Prevents empty `meta/deployments` payloads that made Wrapfully skip Steam.
+
 ## 3.8.1 — 2026-07-14
 
 ### Fixed
