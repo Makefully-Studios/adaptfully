@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
-import { buildOutputDir, resolveBuildArtifactDir } from '../lib/node/artifacts.js';
+import { buildOutputDir, clearStaleBuildExtract, resolveBuildArtifactDir } from '../lib/node/artifacts.js';
 
 describe('artifacts', () => {
     /** @type {string[]} */
@@ -67,5 +67,22 @@ describe('artifacts', () => {
             () => resolveBuildArtifactDir(pkg, { platformKey: 'steam' }),
             /platform "web"/,
         );
+    });
+
+    it('clears stale artifacts/ and wrapfully status files before extract', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-clear-'));
+        tmpDirs.push(root);
+        const nested = path.join(root, 'artifacts', 'artifacts', 'win-unpacked');
+        fs.mkdirSync(nested, { recursive: true });
+        fs.writeFileSync(path.join(root, 'wrapfully-build.json'), '{}');
+        fs.writeFileSync(path.join(root, 'wrapfully-status.json'), '{}');
+        fs.writeFileSync(path.join(root, 'keep-me.txt'), 'ok');
+
+        clearStaleBuildExtract(root);
+
+        assert.equal(fs.existsSync(path.join(root, 'artifacts')), false);
+        assert.equal(fs.existsSync(path.join(root, 'wrapfully-build.json')), false);
+        assert.equal(fs.existsSync(path.join(root, 'wrapfully-status.json')), false);
+        assert.equal(fs.existsSync(path.join(root, 'keep-me.txt')), true);
     });
 });

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.8.1 — 2026-07-14
+
+### Fixed
+
+- **Extract mode** clears stale `output/artifacts/`, `wrapfully-build.json`, and `wrapfully-status.json` before unpacking a Wrapfully response so nested `artifacts/artifacts` leftovers cannot accumulate across runs.
+
 ## 3.8.0 — 2026-07-10
 
 ### Changed
