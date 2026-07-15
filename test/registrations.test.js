@@ -7,6 +7,8 @@ import {
     adaptfullyInjectionForPlatform,
     resolveBuildSpec,
     resolveDeploymentsForPlatform,
+    resolveFamily,
+    resolveFamilyFromTarget,
     resolvePlatformKey,
     resolvePlatformRegistrationsByKey,
     resolvePublishDir,
@@ -161,6 +163,30 @@ describe('registrations', () => {
             platformKey: 'steam',
             steamworks: true,
             deployments: ['zip', 'steam'],
+        });
+    });
+
+    it('resolves pwa builder family with web packager', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    web: {
+                        packager: 'web',
+                        builder: 'pwa',
+                        deployments: ['zip', 'web-prod'],
+                    },
+                },
+            },
+        };
+
+        assert.equal(resolveFamilyFromTarget('pwa'), 'pwa');
+        assert.equal(resolveFamily(['pwa'], 'web'), 'pwa');
+        assert.deepEqual(resolveBuildSpec('web', pkg), {
+            family: 'pwa',
+            targets: ['pwa'],
+            platformKey: 'web',
+            steamworks: false,
+            deployments: ['zip', 'web-prod'],
         });
     });
 

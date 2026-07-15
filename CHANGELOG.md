@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.9.0 — 2026-07-15
+
+### Added
+
+- **`pwa` Wrapfully family** — `resolveFamilyFromTarget('pwa')` / `resolveBuildSpec` return family `pwa` when `builder: "pwa"`, including with `packager: "web"`.
+
 ## 3.8.2 — 2026-07-14
 
 ### Fixed
