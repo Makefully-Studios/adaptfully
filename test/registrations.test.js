@@ -162,6 +162,7 @@ describe('registrations', () => {
             targets: ['win', 'mac', 'linux'],
             platformKey: 'steam',
             steamworks: true,
+            socialLogin: false,
             deployments: ['zip', 'steam'],
         });
     });
@@ -186,8 +187,48 @@ describe('registrations', () => {
             targets: ['pwa'],
             platformKey: 'web',
             steamworks: false,
+            socialLogin: false,
             deployments: ['zip', 'web-prod'],
         });
+    });
+
+    it('defaults android/ios targets to capacitor family', () => {
+        assert.equal(resolveFamilyFromTarget('android'), 'capacitor');
+        assert.equal(resolveFamily(['android', 'ios']), 'capacitor');
+        assert.equal(resolveFamily(['android'], 'cordova'), 'cordova');
+        assert.equal(resolveFamily(['android'], 'capacitor'), 'capacitor');
+    });
+
+    it('resolves capacitor build spec with social-auth', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    android: {
+                        packager: 'capacitor',
+                        registrations: { auth: 'social-auth' },
+                        socialLogin: {
+                            providers: { google: true, apple: true },
+                            google: { webClientId: 'web.apps.googleusercontent.com' },
+                        },
+                    },
+                },
+            },
+        };
+
+        assert.deepEqual(resolveBuildSpec('android', pkg), {
+            family: 'capacitor',
+            targets: ['android'],
+            platformKey: 'android',
+            steamworks: false,
+            socialLogin: true,
+            deployments: ['zip'],
+        });
+    });
+
+    it('builds injection for social-auth plugin', () => {
+        const injection = buildAdaptfullyInjection({ auth: 'social-auth' });
+        assert.match(injection, /adaptfully\.register\('auth', adaptfully\.auth\.Social\)/);
+        assert.match(injection, /registerSocialAuth/);
     });
 
     it('resolves a deployment publish directory under assets/meta/deployments', () => {

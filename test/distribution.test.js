@@ -39,6 +39,13 @@ describe('registration assets', () => {
     });
 
     it('exposes standard plugin keys', () => {
-        assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), ['dev-auth', 'google-auth', 'indexedDB', 'localStorage', 'steam-auth']);
+        assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), [
+            'dev-auth',
+            'google-auth',
+            'indexedDB',
+            'localStorage',
+            'social-auth',
+            'steam-auth',
+        ]);
     });
 });

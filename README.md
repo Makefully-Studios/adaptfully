@@ -91,7 +91,8 @@ storage.getObject('currentGame');
 |------------|--------------|---------|
 | `google-auth` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web, Android, iOS |
 | `steam-auth` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron (via [steamworks.js](https://github.com/ceifa/steamworks.js)) |
-| `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local dev (test user) |
+| `social-auth` | `adaptfully.register('auth', adaptfully.auth.Social)` | Capacitor (via [@capgo/capacitor-social-login](https://github.com/Cap-go/capacitor-social-login)) |
+| `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local / testing |
 
 Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy scripts use a path relative to the deploy folder instead:
 
@@ -133,9 +134,13 @@ Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `
 | `web` | `game-config.js` for **`uwp`** platform prebuilds |
 | `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** is registered |
 | `cordova` | `cordova.js` stub, `game-config.js`, CSP/viewport HTML extras |
-| `capacitor` | `game-config.js` (more Capacitor-specific output planned) |
+| `capacitor` | `game-config.js`, Capacitor CSP/viewport; `social-login-config.js` when **`social-auth`** is registered |
+
+Android/iOS Wrapfully builds default to the **`capacitor`** builder family. Set `packager: "cordova"` on a platform to use Cordova for that target.
 
 **`steam-auth` requires `packager: "electron"`** and `platforms.<name>.steamId` (Steamworks app ID for the client preload). Steam **upload** app IDs live separately in each Steam deployment’s `manifest.json` — see Wrapfully docs.
+
+**`social-auth` requires `packager: "capacitor"`** and `platforms.<name>.socialLogin` (Capgo provider client IDs). Wrapfully installs `@capgo/capacitor-social-login` when building.
 
 ```json
 {
@@ -149,6 +154,20 @@ Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `
         "packager": "electron",
         "steamId": 1234567,
         "registrations": { "auth": "steam-auth" }
+      },
+      "android": {
+        "packager": "capacitor",
+        "registrations": { "auth": "social-auth", "storage": "localStorage" },
+        "socialLogin": {
+          "providers": { "google": true, "apple": true },
+          "google": {
+            "webClientId": "….apps.googleusercontent.com",
+            "iOSClientId": "….apps.googleusercontent.com"
+          },
+          "apple": {
+            "clientId": "com.example.service"
+          }
+        }
       }
     }
   }
@@ -168,6 +187,17 @@ The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam
 |-----|---------|---------|
 | `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the Steam ID on login |
 | `steamReadyTimeoutMs` | `10000` | Max wait when a bridge exists but identity is not yet ready |
+
+#### Social auth (`social-auth`)
+
+When `social-auth` is registered on a **`capacitor`** platform, Adaptfully prebuild writes **`social-login-config.js`** (`window.__ADAPTFULLY_SOCIAL_LOGIN__`) from `platforms.<name>.socialLogin`. Wrapfully installs [`@capgo/capacitor-social-login`](https://github.com/Cap-go/capacitor-social-login) and syncs it into the native project (same role as `steamworks.js` for Electron).
+
+The runtime plugin calls Capgo `SocialLogin.initialize` / `login` / `logout` / `isLoggedIn`. Default provider is `google` on Android and `apple` on iOS when both are enabled (override with `socialLogin.defaultProvider`). Optional config keys:
+
+| Key | Default | Purpose |
+|-----|---------|---------|
+| `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the user id on login |
+| `socialReadyTimeoutMs` | `10000` | Max wait for the Capgo plugin bridge |
 
 ### Node API
 
@@ -415,6 +445,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
 | `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
 | `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
+| `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
 | `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
 
 ### `wrapfully.json`
@@ -453,12 +484,8 @@ Each builder name becomes a path segment on the server. Some builds require a sp
 | `webapp` | Service-worker web app (optionally SFTP deploy) |
 | `steam` | Windows + Mac + Linux, uploads to Steam |
 | `steam-dev` | Debug Windows + Mac + Linux, no Steam upload |
-| `cordova` | Release Android + iOS |
-| `cordova-dev` | Debug Android + iOS |
-| `apple` | Release Mac + iOS |
-| `apple-dev` | Release Mac + debug iOS |
 
-For a single platform, pass the specific builder name rather than a composite.
+For a single platform, pass the specific builder name.
 
 ### Platform package requirements
 
@@ -508,7 +535,7 @@ To deploy to Google Play, also include `assets/meta/deployments/<deployment>/goo
 }
 ```
 
-#### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`, `apple`, `apple-dev`)
+#### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`)
 
 Include `assets/meta/deployments/<deployment>/build.json` with iOS signing settings:
 
@@ -544,9 +571,9 @@ To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.
 }
 ```
 
-#### Cordova (`cordova`, `cordova-dev`)
+#### Cordova
 
-Requires the Android and Apple package requirements above.
+Set `packager: "cordova"` on an `android` or `ios` platform to use Cordova instead of Capacitor. Requires the Android and Apple package requirements above.
 
 #### Steam (`steam`, `steam-dev`)
 

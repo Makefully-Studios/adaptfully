@@ -5,10 +5,12 @@ import os from 'node:os';
 import path from 'node:path';
 import {
     buildElectronMain,
+    CapacitorPackager,
     CordovaPackager,
     createPackagerForPlatform,
     ElectronPackager,
     resolvePlatformPackager,
+    usesSocialAuth,
     usesSteamAuth,
     validatePlatformPackager,
     WebPackager,
@@ -36,6 +38,11 @@ describe('packagers', () => {
         assert.equal(usesSteamAuth({ auth: 'google-auth' }), false);
     });
 
+    it('detects social-auth in registrations', () => {
+        assert.equal(usesSocialAuth({ auth: 'social-auth' }), true);
+        assert.equal(usesSocialAuth({ auth: 'google-auth' }), false);
+    });
+
     it('throws when steam-auth is used without electron packager', () => {
         assert.throws(
             () => validatePlatformPackager('steam', {
@@ -49,6 +56,40 @@ describe('packagers', () => {
                 },
             }),
             /packager is "web"/,
+        );
+    });
+
+    it('throws when social-auth is used without capacitor packager', () => {
+        assert.throws(
+            () => validatePlatformPackager('android', {
+                config: {
+                    platforms: {
+                        android: {
+                            registrations: { auth: 'social-auth' },
+                            socialLogin: {
+                                google: { webClientId: 'web.apps.googleusercontent.com' },
+                            },
+                        },
+                    },
+                },
+            }),
+            /packager is "web"/,
+        );
+    });
+
+    it('throws when social-auth is used without socialLogin config', () => {
+        assert.throws(
+            () => validatePlatformPackager('android', {
+                config: {
+                    platforms: {
+                        android: {
+                            packager: 'capacitor',
+                            registrations: { auth: 'social-auth' },
+                        },
+                    },
+                },
+            }),
+            /socialLogin is not set/,
         );
     });
 
@@ -126,6 +167,28 @@ describe('packagers', () => {
         const packager = createPackagerForPlatform('steam', pkg);
         assert.ok(packager instanceof ElectronPackager);
         assert.equal(packager.usesPlugin('steam-auth'), true);
+        packager.validate();
+    });
+
+    it('detects social-auth on the active platform for capacitor', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    android: {
+                        packager: 'capacitor',
+                        registrations: { auth: 'social-auth' },
+                        socialLogin: {
+                            providers: { google: true, apple: false },
+                            google: { webClientId: 'web.apps.googleusercontent.com' },
+                        },
+                    },
+                },
+            },
+        };
+
+        const packager = createPackagerForPlatform('android', pkg);
+        assert.ok(packager instanceof CapacitorPackager);
+        assert.equal(packager.usesPlugin('social-auth'), true);
         packager.validate();
     });
 
@@ -251,6 +314,49 @@ describe('prebuild packager templates', () => {
         assert.match(html, /<script src="cordova\.js"><\/script>/);
         assert.match(html, /<script src="game-config\.js"><\/script>/);
         assert.match(html, /Content-Security-Policy/);
+        assert.match(gameConfig, /"platform": "android"/);
+    });
+
+    it('writes social-login-config.js and HTML extras for capacitor social-auth', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-capacitor-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(
+            path.join(deploy, 'index.html'),
+            '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>',
+        );
+
+        const pkg = {
+            name: 'sample-game',
+            version: '1.0.0',
+            config: {
+                title: 'Sample Game',
+                platforms: {
+                    android: {
+                        packager: 'capacitor',
+                        registrations: { auth: 'social-auth' },
+                        socialLogin: {
+                            providers: { google: true, apple: false },
+                            google: { webClientId: 'web.apps.googleusercontent.com' },
+                        },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'android', pkg, { log: () => {} });
+        const html = fs.readFileSync(path.join(dest, 'index.html'), 'utf8');
+        const socialConfig = fs.readFileSync(path.join(dest, 'social-login-config.js'), 'utf8');
+        const gameConfig = fs.readFileSync(path.join(dest, 'game-config.js'), 'utf8');
+
+        assert.ok(!fs.existsSync(path.join(dest, 'cordova.js')));
+        assert.match(html, /<script src="social-login-config\.js"><\/script>/);
+        assert.match(html, /<script src="game-config\.js"><\/script>/);
+        assert.match(html, /Content-Security-Policy/);
+        assert.match(socialConfig, /__ADAPTFULLY_SOCIAL_LOGIN__/);
+        assert.match(socialConfig, /web\.apps\.googleusercontent\.com/);
         assert.match(gameConfig, /"platform": "android"/);
     });
 

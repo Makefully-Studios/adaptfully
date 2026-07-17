@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.10.0 — 2026-07-17
+
+### Added
+
+- **`social-auth`** — Capgo `@capgo/capacitor-social-login` auth plugin for Capacitor platforms. Requires `packager: "capacitor"` and `platforms.<name>.socialLogin` provider config. Prebuild writes `social-login-config.js`; Wrapfully installs the native plugin when `socialLogin` is set on the build spec.
+- **`CapacitorPackager`** CSP/viewport HTML extras and social-auth validation/templates.
+
+### Changed
+
+- **Builder family defaults** — `android` / `ios` / `ios-sim` (and `-dev`) resolve to Wrapfully family **`capacitor`**. Explicit `packager: "cordova"` still selects Cordova for that platform. Composite `cordova` / `apple` routes are not used.
+- **`resolveBuildSpec`** includes `socialLogin: boolean`.
+
 ## 3.9.0 — 2026-07-15
 
 ### Added
