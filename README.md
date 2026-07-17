@@ -211,7 +211,7 @@ After prebuild, the build and deploy stages zip `output/<platform>-prebuild/` an
 
 ```bash
 npx adaptfully prebuild web
-npx adaptfully deploy steam http://build.example.com:9630/
+npx adaptfully deploy steam http://build.example.com:9633/
 ```
 
 For web-only hosting (no Wrapfully), stop after prebuild and upload `output/web-prebuild/` yourself.
@@ -246,10 +246,10 @@ Examples:
 npx adaptfully prebuild web
 
 # Build for Steam via Wrapfully
-npx adaptfully build steam http://build.example.com:9630/
+npx adaptfully build steam http://build.example.com:9633/
 
 # Full Steam deploy (build + upload when steam.json credentials are present)
-npx adaptfully deploy steam http://build.example.com:9630/
+npx adaptfully deploy steam http://build.example.com:9633/
 ```
 
 Add scripts to your project's `package.json`:
@@ -278,7 +278,7 @@ The server URL is resolved in this order:
 1. CLI argument
 2. `WRAPFULLY_SERVER` environment variable
 3. `server` field in `wrapfully.json`
-4. `http://localhost:9630/`
+4. `http://localhost:9633/`
 
 Keep server addresses and credentials out of version control — use environment variables or a gitignored `wrapfully.json`.
 
@@ -293,7 +293,7 @@ The client POSTs a zip stream built from `output/<platform>-prebuild/` to:
 For example, a project named `mygame` at version `1.2.0` with builder `android`:
 
 ```
-http://build.example.com:9630/android/mygame-1.2.0
+http://build.example.com:9633/android/mygame-1.2.0
 ```
 
 The server extracts the zip, reads the embedded `package.json`, runs the build for that platform, and streams a zip of artifacts back to the client.
@@ -424,7 +424,7 @@ Optional. Fields are shallow-merged into `package.json`'s `config`:
 ```json
 {
   "deployFolder": "dist",
-  "server": "http://build.example.com:9630/",
+  "server": "http://build.example.com:9633/",
   "title": "My Game",
   "packageName": "com.example.mygame"
 }
