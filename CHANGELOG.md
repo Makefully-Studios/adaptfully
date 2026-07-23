@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.11.0 — 2026-07-23
+
+### Added
+
+- **Layered icon validation** — build/deploy/release zips always include `meta/icon-foreground.png` and `meta/icon-background.png`. When project icons are missing under `assets/meta/`, Adaptfully **warns** (does not fail) and ships packaged placeholder icons from `lib/assets/`.
+- **`resolveMetaIcons` / `appendMetaIcons`** — exported helpers for resolving project vs placeholder icon paths.
+
+### Changed
+
+- Legacy meta packaging skips re-adding icon filenames so placeholders and project icons are not duplicated in the zip.
+
 ## 3.10.0 — 2026-07-17
 
 ### Added
@@ -13,6 +24,7 @@ All notable changes to this project are documented in this file.
 
 - **Builder family defaults** — `android` / `ios` / `ios-sim` (and `-dev`) resolve to Wrapfully family **`capacitor`**. Explicit `packager: "cordova"` still selects Cordova for that platform. Composite `cordova` / `apple` routes are not used.
 - **`resolveBuildSpec`** includes `socialLogin: boolean`.
+- **Single-target Wrapfully POSTs** go to the target route (`/android/build`, `/ios/release`, …) instead of the family route (`/capacitor/...`), so OS relay and existing target routes keep working.
 
 ## 3.9.0 — 2026-07-15
 

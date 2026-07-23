@@ -363,7 +363,7 @@ mygame/
 
 The selected deployment's folder is shipped as `meta/publish/` in the zip, so per-platform credential file names (`build.json`, `sftp.json`, `steam.json`, `apple.json`, `google.json`, `ms.json`, `android/`, `ms/`) live inside `assets/meta/deployments/<key>/`.
 
-Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile, desktop, and Steam builds.
+Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile, desktop, and Steam builds. If either file is missing from `assets/meta/`, Adaptfully **warns** and ships packaged placeholder icons for that build so Wrapfully can still run.
 
 ### Icons
 
@@ -377,6 +377,8 @@ Place two layered PNG files in `./assets/meta/` (packaged as `meta/` in the zip)
 The build server composites the foreground over the background, applies a binding/logo overlay, and generates the icon sizes each platform needs.
 
 **Recommended format:** 1536×1536 pixel square PNGs for both files. Images with other dimensions are scaled to 1536×1536 automatically, but matching the target size produces the sharpest results.
+
+Missing icons do not fail the Adaptfully client: check the `WARNING missing layered icon(s)` log line and replace the placeholders before a store release.
 
 ## Configuration
 
