@@ -7,13 +7,17 @@ import {
     buildSteamPublishJson,
     collectSteamAuthFiles,
     defaultSteamPublishPath,
-} from '../lib/node/steam-auth.js';
+} from '../lib/node/steam-publish.js';
 
-describe('steam-auth', () => {
+describe('steam-publish', () => {
     it('defaults steam.json output path', () => {
         assert.equal(
             defaultSteamPublishPath('/project'),
             path.resolve('/project', 'assets', 'meta', 'deployments', 'steam', 'steam.json'),
+        );
+        assert.equal(
+            defaultSteamPublishPath('/project', 'steam-prod'),
+            path.resolve('/project', 'assets', 'meta', 'deployments', 'steam-prod', 'steam.json'),
         );
     });
 
@@ -44,7 +48,7 @@ describe('steam-auth', () => {
     });
 
     it('collects config.vdf and ssfn from a steamcmd directory', async () => {
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-steam-auth-'));
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-steam-publish-'));
 
         fs.mkdirSync(path.join(tmp, 'config'), { recursive: true });
         fs.writeFileSync(path.join(tmp, 'config', 'config.vdf'), '"InstallConfigStore"\n{\n}\n');

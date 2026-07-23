@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.12.0 — 2026-07-23
+
+### Added
+
+- **`adaptfully google-publish`** — import a Google Play service-account JSON into `assets/meta/deployments/android/google.json` (or `--deployment` / `--output`) and ensure `manifest.json` has `"type": "google"`.
+- **`adaptfully apple-publish`** — prompt for (or accept) App Store Connect credentials and write `assets/meta/deployments/ios/apple.json` with `"type": "apple"` on the deployment manifest.
+- **Publish helpers update `.gitignore`** — `steam-publish` / `google-publish` / `apple-publish` append standard `assets/meta/deployments/**` credential ignore patterns (and any custom `--output` under the project) so secrets are less likely to be committed.
+
+### Changed
+
+- **`adaptfully steam-publish`** replaces the credential CLI formerly named `steam-auth` (runtime plugin `steam-auth` is unchanged). `adaptfully steam-auth` still works as a deprecated alias.
+- Steam publish also ensures the deployment `manifest.json` has `"type": "steam"`.
+
 ## 3.11.0 — 2026-07-23
 
 ### Added

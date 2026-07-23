@@ -26,7 +26,9 @@ adaptfully build steam                        # prebuild + zip and send to Wrapf
 adaptfully deploy web                         # prebuild + POST to Wrapfully for each of web's deployments
 adaptfully deploy web --deployment web-prod   # deploy to a single named deployment
 adaptfully deploy steam                       # prebuild + POST to Wrapfully steam builder
-adaptfully steam-auth                         # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
+adaptfully steam-publish                      # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
+adaptfully google-publish --from ./sa.json    # one-time: import Play service account → deployments/android/google.json
+adaptfully apple-publish                      # one-time: write App Store Connect creds → deployments/ios/apple.json
 ```
 
 | Stage | What it does |
@@ -34,7 +36,9 @@ adaptfully steam-auth                         # one-time: log in with steamcmd �
 | `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
 | `build` | Prebuild, then POST the result to Wrapfully (artifact zip only) |
 | `deploy` | POST the prior build artifact from `./output/` to each configured deployment (or `--deployment`) |
-| `steam-auth` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` |
+| `steam-publish` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` (also updates `.gitignore`) |
+| `google-publish` | One-time local setup: import a Play Console service-account JSON into the `android` deployment folder (also updates `.gitignore`) |
+| `apple-publish` | One-time local setup: write App Store Connect credentials into the `ios` deployment folder (also updates `.gitignore`) |
 
 `wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
 
@@ -253,8 +257,10 @@ For web-only hosting (no Wrapfully), stop after prebuild and upload `output/web-
 Run from your project root:
 
 ```bash
-npx adaptfully <prebuild|build|deploy> <platform> [server] [mode]
-npx adaptfully steam-auth [--username U] [--password P] [--output path]
+npx adaptfully <prebuild|build|deploy|release> <platform> [server] [mode]
+npx adaptfully steam-publish [--username U] [--password P] [--deployment steam] [--output path]
+npx adaptfully google-publish [--from service-account.json] [--deployment android] [--output path]
+npx adaptfully apple-publish [--deployment ios] [--category C] [--identity I] [--username U] [--password P]
 ```
 
 | Stage | Description |
@@ -520,7 +526,14 @@ Place keystore files in `assets/meta/deployments/<deployment>/android/`. Include
 }
 ```
 
-To deploy to Google Play, also include `assets/meta/deployments/<deployment>/google.json`:
+To deploy to Google Play, also include `assets/meta/deployments/<deployment>/google.json`. The easiest path is:
+
+```bash
+npx adaptfully google-publish --from ./path/to/play-service-account.json
+# defaults to assets/meta/deployments/android/google.json (+ manifest type "google")
+```
+
+The file looks like:
 
 ```json
 {
@@ -562,7 +575,14 @@ Include `assets/meta/deployments/<deployment>/build.json` with iOS signing setti
 }
 ```
 
-To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.json`:
+To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.json`. The easiest path is:
+
+```bash
+npx adaptfully apple-publish
+# defaults to assets/meta/deployments/ios/apple.json (+ manifest type "apple")
+```
+
+The file looks like:
 
 ```json
 {
@@ -581,7 +601,7 @@ Set `packager: "cordova"` on an `android` or `ios` platform to use Cordova inste
 
 `steam-dev` builds debug Electron binaries for Windows, Mac, and Linux without uploading to Steam. No `steam.json` credentials are required.
 
-For release uploads, run **`adaptfully steam-auth`** once on your machine. It installs steamcmd if needed, logs you in interactively (enter a Steam Guard code if prompted), and writes `assets/meta/deployments/steam/steam.json`:
+For release uploads, run **`adaptfully steam-publish`** once on your machine. It installs steamcmd if needed, logs you in interactively (enter a Steam Guard code if prompted), and writes `assets/meta/deployments/steam/steam.json`:
 
 ```json
 {
@@ -595,7 +615,7 @@ For release uploads, run **`adaptfully steam-auth`** once on your machine. It in
 
 Accounts **without** Steam Guard only need `username`, `password`, and `configVdf`. Accounts **with** Steam Guard also include the `ssfn` sentry file so the Wrapfully server can log in without a live 2FA prompt.
 
-Re-run `adaptfully steam-auth` if Steam invalidates the token (new machine, password change, or expired guard).
+Re-run `adaptfully steam-publish` if Steam invalidates the token (new machine, password change, or expired guard).
 
 For Steamworks / `steam-auth` client builds, set `platforms.<name>.steamId`. For Steam **uploads**, set `steamId` on the deployment’s `manifest.json` (see Wrapfully). Those are independent: you can deploy without steam-auth, or use steam-auth without uploading.
 
