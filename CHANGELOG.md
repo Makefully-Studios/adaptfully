@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.12.1 — 2026-07-23
+
+### Fixed
+
+- **Publish path prompts** — strip wrapping quotes from user-supplied paths (e.g. pasted `"D:\…\key.json"`) so absolute paths are not treated as project-relative.
+
 ## 3.12.0 — 2026-07-23
 
 ### Added

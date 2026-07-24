@@ -8,6 +8,8 @@ import {
     ensureDeploymentManifest,
     ensurePublishCredentialsGitignore,
     defaultDeploymentCredentialPath,
+    normalizeUserPath,
+    resolveUserPath,
     PUBLISH_CREDENTIAL_GITIGNORE_PATTERNS,
 } from '../lib/node/publish-credentials.js';
 import {
@@ -27,6 +29,15 @@ describe('publish-credentials', () => {
         assert.equal(
             defaultDeploymentCredentialPath('/p', 'android', 'google.json'),
             path.resolve('/p', 'assets', 'meta', 'deployments', 'android', 'google.json'),
+        );
+    });
+
+    it('strips wrapping quotes from user path input', () => {
+        assert.equal(normalizeUserPath('"D:\\code\\gw\\key.json"'), 'D:\\code\\gw\\key.json');
+        assert.equal(normalizeUserPath("'./relative/key.json'"), './relative/key.json');
+        assert.equal(
+            resolveUserPath('"C:\\abs\\key.json"'),
+            path.resolve('C:\\abs\\key.json'),
         );
     });
 
@@ -124,6 +135,27 @@ describe('google-publish', () => {
             JSON.parse(fs.readFileSync(path.join(path.dirname(result.outputPath), 'manifest.json'), 'utf8')).type,
             'google',
         );
+    });
+
+    it('accepts a quoted absolute --from path', async () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-google-quoted-'));
+        const from = path.join(tmp, 'sa.json');
+        const projectRoot = path.join(tmp, 'game');
+
+        await fsp.writeFile(from, JSON.stringify({
+            type: 'service_account',
+            project_id: 'proj',
+            private_key: 'key',
+            client_email: 'bot@proj.iam.gserviceaccount.com',
+        }));
+
+        const result = await runGooglePublish({
+            from: `"${from}"`,
+            projectRoot,
+            log: () => {},
+        });
+
+        assert.ok(fs.existsSync(result.outputPath));
     });
 });
 
