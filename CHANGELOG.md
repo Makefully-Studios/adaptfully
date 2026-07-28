@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.13.0 — 2026-07-24
+
+### Added
+
+- **Per-platform `config.*` overrides** — `config.platforms.<key>.packageName` (and other identity/branding fields) override top-level `config.*` defaults for that platform. Control fields (`packager`, `registrations`, `builder`, `deployments`, `steamId`, `socialLogin`, `steamworks`) are unchanged. Helpers: `resolvePlatformConfig`, `getConfigValue`, `resolveConfigForBuild`.
+
 ## 3.12.1 — 2026-07-23
 
 ### Fixed

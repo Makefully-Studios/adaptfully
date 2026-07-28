@@ -437,13 +437,13 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | Field | Used by | Description |
 |-------|---------|-------------|
 | `title` | All | Display name shown in stores and app shells |
-| `packageName` | Cordova, Electron, UWP | Reverse-DNS identifier (`com.company.game`) |
+| `packageName` | Cordova, Capacitor, Electron, UWP, Play upload | Reverse-DNS identifier (`com.company.game`) |
 | `publisherDisplayName` | Cordova, Electron, web | Short publisher name |
 | `publisherFullName` | Electron | Legal entity name for copyright |
 | `publisherWebsite` | Cordova, web | Company URL |
 | `publisherEmailAddress` | Cordova | Contact email |
 | `scope` | Web/PWA | Base URL scope for the web app |
-| `themeColor` | Cordova, Electron, UWP, web | Loading screen / theme color |
+| `themeColor` | Cordova, Capacitor, Electron, UWP, web | Loading screen / theme color |
 | `twitterId` | Web | Twitter handle for meta tags |
 | `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
 | `htmlInjections` | Prebuild | Deploy-relative HTML paths to inject (default: `["index.html"]`) |
@@ -454,7 +454,28 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
 | `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
+| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks` |
 | `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
+
+Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
+
+```json
+"config": {
+  "packageName": "com.example.game",
+  "title": "My Game",
+  "platforms": {
+    "android": {
+      "packager": "capacitor",
+      "packageName": "com.example.game.android"
+    },
+    "android-dev": {
+      "packager": "capacitor",
+      "packageName": "com.example.game.dev"
+    }
+  }
+}
+```
+
 
 ### `wrapfully.json`
 
