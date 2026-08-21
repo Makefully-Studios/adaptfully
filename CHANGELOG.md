@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.14.0 — 2026-08-21
+
+### Added
+
+- **`platform.supportsLogout()`** — whether `logout()` yields a durable signed-out state. Google, social, and dev return `true`; Steam returns `false` (Steamworks identity returns on `autoLogin`). Defaults to `false` when the auth plugin omits the method. Games should hide Sign out UI when this is false.
+- **`platform.requiresEmail()`** — whether a complete identity needs email in addition to id. Google, social, and dev return `true`; Steam returns `false`. Defaults to `true` when unimplemented. Use instead of branching on `auth.name === 'steam'` for session completeness and account-sync routing.
+
 ## 3.13.0 — 2026-07-24
 
 ### Added

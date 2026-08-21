@@ -185,7 +185,7 @@ When `steam-auth` is registered on an **`electron`** platform, Adaptfully prebui
 - **`main.js`** — Electron shell with Steam overlay enabled and a preload script wired in
 - **`preload.js`** — initializes [steamworks.js](https://github.com/ceifa/steamworks.js) with `platforms.<name>.steamId` and exposes `window.__ADAPTFULLY_STEAMWORKS__`
 
-The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam is available, `autoLogin()` succeeds immediately with `{ id: steamId64, email: '' }`. Optional config keys:
+The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam is available, `autoLogin()` succeeds immediately with `{ id: steamId64, email: '' }`. `supportsLogout()` is `false` and `requiresEmail()` is `false` — games should not offer Sign out, and should treat id-only identity as complete. Optional config keys:
 
 | Key | Default | Purpose |
 |-----|---------|---------|
@@ -229,6 +229,9 @@ import {
 - **`runAdaptfullyStage('prebuild' | 'build' | 'deploy', platformKey, options)`** — run a pipeline stage programmatically.
 - **`platform.autoLogin(callback)`** — restore a prior session without UI when the auth plugin supports it (Google uses `lastLoggedIn` in storage and a cached OAuth token).
 - **`platform.supportsAutoLogin()`** — whether the active auth plugin can attempt automatic sign-in.
+- **`platform.logout(callback)`** — clear / revoke the platform session when supported.
+- **`platform.supportsLogout()`** — whether logout is a durable user-facing action. Steam returns `false` (identity is bound to the Steam client); Google, social, and dev return `true`. Prefer this over checking `auth.name` when showing Sign out UI.
+- **`platform.requiresEmail()`** — whether `getUser()` must include email for a complete session. Steam returns `false` (SteamID64 alone); Google, social, and dev return `true`. Prefer this over checking `auth.name` for session sync and account-link routing.
 
 ---
 
