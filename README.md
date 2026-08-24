@@ -89,6 +89,34 @@ storage.set('playerName', 'Ada');
 storage.getObject('currentGame');
 ```
 
+### Analytics plugins
+
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `http-analytics` | `adaptfully.register('analytics', adaptfully.analytics.Http())` | Batches events to a first-party collector URL |
+| `noop-analytics` | `adaptfully.register('analytics', adaptfully.analytics.Noop())` | Same API; no network (dev / opt-out builds) |
+
+Register under the `analytics` key (same pattern as `auth` / `storage`). Point the HTTP plugin at your collector via Adaptfully **config**:
+
+| Config key | Purpose |
+|------------|---------|
+| `analyticsEndpoint` | `POST` URL for event batches (required for HTTP) |
+| `analyticsGameId` | Game id stamped on payloads (falls back to `window.gameConfig.id`) |
+| `analyticsEnabled` | Set `false` to disable without swapping plugins |
+| `analyticsPlatform` / `analyticsAppVersion` | Optional overrides; otherwise `window.gameConfig` |
+
+In-game:
+
+```javascript
+const analytics = adaptfully.get('analytics');
+analytics.setContext({ channel: 'web' });
+analytics.identify(accountId); // opaque id only — no emails
+analytics.track('game_start', { mapId: 28, players: 1 });
+analytics.optOut(); // persists via storage when registered
+```
+
+Games should call `adaptfully.has('analytics')` before `get` during rollout if older builds may omit the registration. Prefer named product events over fake page paths. Do not branch on Steam vs Capacitor for delivery — the HTTP plugin works across shells.
+
 ### Auth plugins
 
 | Plugin key | Registration | Runtime |

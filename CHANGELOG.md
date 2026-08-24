@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.15.0 — 2026-08-24
+
+### Added
+
+- **`http-analytics`** — vendor-neutral analytics plugin that batches `track` events to `config.analyticsEndpoint` via `sendBeacon` / `fetch` (works on web, Electron `file://`, and Capacitor). Config: `analyticsEndpoint`, `analyticsGameId`, `analyticsEnabled`, optional `analyticsPlatform` / `analyticsAppVersion`. API: `track`, `identify`, `setContext`, `optOut` / `optIn` / `isOptedOut`, `flush`.
+- **`noop-analytics`** — same surface with no network I/O (local/dev and privacy-off builds).
+
 ## 3.14.0 — 2026-08-21
 
 ### Added

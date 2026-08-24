@@ -42,8 +42,10 @@ describe('registration assets', () => {
         assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), [
             'dev-auth',
             'google-auth',
+            'http-analytics',
             'indexedDB',
             'localStorage',
+            'noop-analytics',
             'social-auth',
             'steam-auth',
         ]);
