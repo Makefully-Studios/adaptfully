@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.15.1 — 2026-09-01
+
+### Fixed
+
+- **Capacitor/Cordova HTML injection** — packager `<meta>` tags (CSP, viewport) are injected into `<head>`; script tags stay in the body `<!-- adaptfully -->` slot. Fixes browsers ignoring CSP delivered outside `<head>`.
+
 ## 3.15.0 — 2026-08-24
 
 ### Added

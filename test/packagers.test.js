@@ -360,6 +360,50 @@ describe('prebuild packager templates', () => {
         assert.match(gameConfig, /"platform": "android"/);
     });
 
+    it('places CSP meta in head when adaptfully marker is in body', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-cap-body-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(
+            path.join(deploy, 'index.html'),
+            [
+                '<html><head><title>Game</title></head>',
+                '<body><!-- adaptfully --><!-- /adaptfully --></body></html>',
+            ].join(''),
+        );
+
+        const pkg = {
+            name: 'sample-game',
+            version: '1.0.0',
+            config: {
+                title: 'Sample Game',
+                platforms: {
+                    android: {
+                        packager: 'capacitor',
+                        registrations: { auth: 'social-auth' },
+                        socialLogin: {
+                            providers: { google: true, apple: false },
+                            google: { webClientId: 'web.apps.googleusercontent.com' },
+                        },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'android', pkg, { log: () => {} });
+        const html = fs.readFileSync(path.join(dest, 'index.html'), 'utf8');
+        const headEnd = html.indexOf('</head>');
+        const bodyStart = html.indexOf('<body>');
+
+        assert.ok(headEnd > 0 && bodyStart > headEnd);
+        assert.match(html, /Content-Security-Policy/);
+        assert.ok(html.indexOf('Content-Security-Policy') < headEnd);
+        assert.match(html, /<script src="social-login-config\.js"><\/script>/);
+        assert.ok(html.indexOf('social-login-config.js') > bodyStart);
+    });
+
     it('writes game-config.js for uwp platform prebuild', () => {
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-uwp-'));
         const deploy = path.join(tmp, 'deploy');
