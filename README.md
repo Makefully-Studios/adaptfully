@@ -63,7 +63,7 @@ A **platform** (`config.platforms.<key>`) describes *how* to build — registrat
 
 > **Back-compat:** projects with no `assets/meta/deployments/` directory keep the legacy behavior — the entire `assets/meta/` tree (including `assets/meta/publish/`) is shipped as `meta/`, and a single set of credentials is read from `meta/publish/`.
 
-Place `<!-- adaptfully -->` / `<!-- /adaptfully -->` markers in your HTML templates where registrations should be injected (typically between split bundle scripts, before `account.js` runs).
+Place `<!-- adaptfully -->` / `<!-- /adaptfully -->` markers in your HTML templates where registrations should be injected (typically between split bundle scripts, before `account.js` runs). **Do not also inline Adaptfully auth scripts at game compile time** — prebuild/release owns the marker block for each platform.
 
 ```javascript
 // Injected into deploy/index.html for the target platform (before game code):
@@ -224,7 +224,11 @@ The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam
 
 When `social-auth` is registered on a **`capacitor`** platform, Adaptfully prebuild writes **`social-login-config.js`** (`window.__ADAPTFULLY_SOCIAL_LOGIN__`) from `platforms.<name>.socialLogin`. Wrapfully installs [`@capgo/capacitor-social-login`](https://github.com/Cap-go/capacitor-social-login) and syncs it into the native project (same role as `steamworks.js` for Electron).
 
-The runtime plugin calls Capgo `SocialLogin.initialize` / `login` / `logout` / `isLoggedIn`. Default provider is `google` on Android and `apple` on iOS when both are enabled (override with `socialLogin.defaultProvider`). Optional config keys:
+The runtime plugin calls Capgo `SocialLogin.initialize` / `login` / `logout` / `isLoggedIn`. Default provider is `google` on Android and `apple` on iOS when both are enabled (override with `socialLogin.defaultProvider`).
+
+**Apple-only iOS** (`providers.google: false`, `providers.apple: true`) is supported — Google `webClientId` is not required. On iOS, if `apple.clientId` is omitted, Adaptfully defaults it to the platform `packageName` (Capgo uses this as a plugin label on native iOS, not an Apple Services ID). On Android, Apple Sign-In still requires `apple.clientId`. At runtime, an empty Apple `clientId` also falls back to `window.gameConfig.packageName`.
+
+Optional config keys:
 
 | Key | Default | Purpose |
 |-----|---------|---------|
@@ -604,28 +608,20 @@ The file looks like:
 
 #### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`)
 
-Include `assets/meta/deployments/<deployment>/build.json` with iOS signing settings:
+**Capacitor iOS** signing is file-based under the deployment folder (not the Cordova-style `build.json` `ios.*` identity fields):
 
-```json
-{
-  "ios": {
-    "debug": {
-      "codeSignIdentity": "iPhone Development",
-      "provisioningProfile": "(your development provisioning profile id)",
-      "developmentTeam": "(your team id)",
-      "packageType": "development",
-      "automaticProvisioning": false
-    },
-    "release": {
-      "codeSignIdentity": "iPhone Distribution",
-      "provisioningProfile": "(your distribution provisioning profile id)",
-      "developmentTeam": "(your team id)",
-      "packageType": "app-store",
-      "automaticProvisioning": false
-    }
-  }
-}
 ```
+assets/meta/deployments/<deployment>/
+  apple.json
+  apple/distribution.p12              # release
+  apple/app-store.mobileprovision     # release
+  apple/development.p12               # ios-dev device
+  apple/development.mobileprovision   # ios-dev device
+```
+
+The `.p12` passphrase must match `MAC_KEYCHAIN_PASSWORD` on the Mac Wrapfully host. Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
+
+Optional `build.json` may still be present for tooling compatibility; Capacitor does not require its `ios.*` code-sign fields.
 
 To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.json`. The easiest path is:
 
@@ -638,13 +634,14 @@ The file looks like:
 
 ```json
 {
-  "category": "(your app's category)",
-  "identity": "(your team identity)",
-  "username": "(your username)",
-  "password": "(your password)"
+  "category": "public.app-category.games",
+  "identity": "(your team id)",
+  "username": "(Apple ID email)",
+  "password": "(app-specific password)"
 }
 ```
 
+iOS IPA upload uses `username` + `password` via `xcrun altool --upload-app`. `category` / `identity` matter more for macOS Electron signing/notarization.
 #### Cordova
 
 Set `packager: "cordova"` on an `android` or `ios` platform to use Cordova instead of Capacitor. Requires the Android and Apple package requirements above.

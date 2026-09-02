@@ -9,10 +9,12 @@ import {
     CordovaPackager,
     createPackagerForPlatform,
     ElectronPackager,
+    normalizeSocialLoginConfig,
     resolvePlatformPackager,
     usesSocialAuth,
     usesSteamAuth,
     validatePlatformPackager,
+    validateSocialLoginConfig,
     WebPackager,
 } from '../lib/node/packagers.js';
 import { prebuildPlatform } from '../lib/node/prebuild.js';
@@ -429,5 +431,44 @@ describe('prebuild packager templates', () => {
 
         assert.match(html, /<script src="game-config\.js"><\/script>/);
         assert.match(gameConfig, /"platform": "ms"/);
+    });
+
+    it('allows Apple-only iOS socialLogin without Google webClientId', () => {
+        assert.doesNotThrow(() => validatePlatformPackager('ios', {
+            name: 'sample-game',
+            config: {
+                packageName: 'com.example.game',
+                platforms: {
+                    ios: {
+                        packager: 'capacitor',
+                        registrations: { auth: 'social-auth' },
+                        socialLogin: {
+                            providers: { google: false, apple: true },
+                        },
+                    },
+                },
+            },
+        }));
+
+        const normalized = normalizeSocialLoginConfig(
+            { providers: { google: false, apple: true } },
+            'ios',
+            { packageName: 'com.example.game' },
+        );
+        assert.equal(normalized.providers.google, false);
+        assert.equal(normalized.providers.apple, true);
+        assert.equal(normalized.defaultProvider, 'apple');
+        assert.equal(normalized.apple.clientId, 'com.example.game');
+        assert.doesNotThrow(() => validateSocialLoginConfig(normalized));
+    });
+
+    it('still requires Google webClientId when Google is enabled', () => {
+        assert.throws(
+            () => validateSocialLoginConfig(normalizeSocialLoginConfig(
+                { providers: { google: true, apple: false } },
+                'android',
+            )),
+            /webClientId/,
+        );
     });
 });

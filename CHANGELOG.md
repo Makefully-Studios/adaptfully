@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.16.0 — 2026-09-02
+
+### Added
+
+- **Apple-only iOS `social-auth`** — `providers.google: false` + `providers.apple: true` no longer requires `google.webClientId`. On iOS, missing `apple.clientId` defaults to the platform `packageName`; runtime also falls back to `window.gameConfig.packageName`.
+- **Publish gitignore** — ignore `assets/meta/deployments/**/apple/` (`.p12` / `.mobileprovision`).
+
+### Docs
+
+- Registrations are owned by prebuild HTML markers (do not double-inline at compile time).
+- Capacitor iOS signing is file-based under `apple/` (not Cordova-era `build.json` ios fields).
+
 ## 3.15.1 — 2026-09-01
 
 ### Fixed
