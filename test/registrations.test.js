@@ -198,8 +198,11 @@ describe('registrations', () => {
     it('defaults android/ios targets to capacitor family', () => {
         assert.equal(resolveFamilyFromTarget('android'), 'capacitor');
         assert.equal(resolveFamily(['android', 'ios']), 'capacitor');
-        assert.equal(resolveFamily(['android'], 'cordova'), 'cordova');
         assert.equal(resolveFamily(['android'], 'capacitor'), 'capacitor');
+        assert.throws(
+            () => resolveFamily(['android'], 'cordova'),
+            /Cordova\/PhoneGap is no longer supported/,
+        );
     });
 
     it('resolves capacitor build spec with social-auth', () => {

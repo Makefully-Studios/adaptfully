@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## 4.0.0 — 2026-09-03
+
+### Removed
+
+- **Cordova / PhoneGap** — Dropped `CordovaPackager`, `packager: "cordova"`, and the `cordova` package keyword. Android/iOS prebuild and Wrapfully family resolution are Capacitor-only.
+- **`CordovaPackager` export** — No longer exported from `@makefully/adaptfully`.
+
+### Changed
+
+- **`resolveFamily(..., 'cordova')`** — Throws an explicit error directing clients to Capacitor.
+- **Major version** — Breaking for projects still configured with Cordova.
+
 ## 3.16.1 — 2026-09-03
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
     "name": "@makefully/adaptfully",
-    "version": "3.16.1",
+    "version": "4.0.0",
     "description": "Platform abstraction and Wrapfully deploy client for Makefully games",
     "type": "module",
     "main": "./lib/node/index.js",
@@ -40,7 +40,7 @@
         "platform",
         "deploy",
         "build",
-        "cordova",
+        "capacitor",
         "electron"
     ],
     "contributors": [

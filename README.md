@@ -159,16 +159,15 @@ Standard plugin keys load bundled Adaptfully runtime scripts and emit an inline 
 
 Wrapfully builders (`steam`, `win`, `mac`, `android`, etc.) map to platform keys via defaults (`win` → `steam`) or an explicit `builders` array on the platform config.
 
-Each platform entry may set a **`packager`** (`web`, `electron`, `cordova`, or `capacitor`). Defaults to **`web`** — copy deploy and inject HTML only. Packagers are implemented as classes (`WebPackager`, `ElectronPackager`, `CordovaPackager`, `CapacitorPackager`) that handle prebuild output for their target platforms.
+Each platform entry may set a **`packager`** (`web`, `electron`, or `capacitor`). Defaults to **`web`** — copy deploy and inject HTML only. Packagers are implemented as classes (`WebPackager`, `ElectronPackager`, `CapacitorPackager`) that handle prebuild output for their target platforms.
 
 | Packager | Prebuild adds |
 |----------|---------------|
 | `web` | `game-config.js` for **`uwp`** platform prebuilds |
 | `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** is registered |
-| `cordova` | `cordova.js` stub, `game-config.js`, CSP/viewport HTML extras |
 | `capacitor` | `game-config.js`, Capacitor CSP/viewport; `social-login-config.js` when **`social-auth`** is registered |
 
-Android/iOS Wrapfully builds default to the **`capacitor`** builder family. Set `packager: "cordova"` on a platform to use Cordova for that target.
+Android/iOS Wrapfully builds use the **`capacitor`** builder family. Cordova/PhoneGap is no longer supported.
 
 **`steam-auth` requires `packager: "electron"`** and `platforms.<name>.steamId` (Steamworks app ID for the client preload). Steam **upload** app IDs live separately in each Steam deployment’s `manifest.json` — see Wrapfully docs.
 
@@ -461,10 +460,6 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
         }
       }
     },
-    "properties": [
-      { "tag": "plugin", "name": "cordova-plugin-inappbrowser" },
-      { "tag": "allow-navigation", "href": "*" }
-    ]
   }
 }
 ```
@@ -472,13 +467,13 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | Field | Used by | Description |
 |-------|---------|-------------|
 | `title` | All | Display name shown in stores and app shells |
-| `packageName` | Cordova, Capacitor, Electron, UWP, Play upload | Reverse-DNS identifier (`com.company.game`) |
-| `publisherDisplayName` | Cordova, Electron, web | Short publisher name |
+| `packageName` | Capacitor, Electron, UWP, Play upload | Reverse-DNS identifier (`com.company.game`) |
+| `publisherDisplayName` | Electron, web | Short publisher name |
 | `publisherFullName` | Electron | Legal entity name for copyright |
-| `publisherWebsite` | Cordova, web | Company URL |
-| `publisherEmailAddress` | Cordova | Contact email |
+| `publisherWebsite` | Web | Company URL |
+| `publisherEmailAddress` | Optional | Contact email |
 | `scope` | Web/PWA | Base URL scope for the web app |
-| `themeColor` | Cordova, Capacitor, Electron, UWP, web | Loading screen / theme color |
+| `themeColor` | Capacitor, Electron, UWP, web | Loading screen / theme color |
 | `twitterId` | Web | Twitter handle for meta tags |
 | `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
 | `htmlInjections` | Prebuild | Deploy-relative HTML paths to inject (default: `["index.html"]`) |
@@ -486,11 +481,10 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms` | Prebuild | Per-platform registration maps (see [Adaptfully runtime](#adaptfully-runtime)) |
 | `platforms.<name>.builder` | Build/deploy | Override Wrapfully builder for a platform (default: `web` → `webapp`, others match platform key) |
 | `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
-| `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, `cordova`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
+| `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
 | `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
 | `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks` |
-| `properties` | Cordova | Cordova config.xml entries (plugins, allow-navigation, etc.) |
 
 Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
 
@@ -608,7 +602,7 @@ The file looks like:
 
 #### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`)
 
-**Capacitor iOS** signing is file-based under the deployment folder (not the Cordova-style `build.json` `ios.*` identity fields):
+**Capacitor iOS** signing is file-based under the deployment folder:
 
 ```
 assets/meta/deployments/<deployment>/
@@ -617,11 +611,10 @@ assets/meta/deployments/<deployment>/
   apple/app-store.mobileprovision     # release
   apple/development.p12               # ios-dev device
   apple/development.mobileprovision   # ios-dev device
+  build.json                          # optional: { "apple": { "p12Password": "..." } }
 ```
 
-`adaptfully build` (zip-only) still packages this deployment folder for Capacitor/Cordova so device debug builds can sign. The `.p12` passphrase must match `MAC_KEYCHAIN_PASSWORD` on the Mac Wrapfully host. Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
-
-Optional `build.json` may still be present for tooling compatibility; Capacitor does not require its `ios.*` code-sign fields.
+`adaptfully build` (zip-only) still packages this deployment folder for Capacitor so device debug builds can sign. Optional `build.json` may set `apple.p12Password` for the `.p12` passphrase (Wrapfully uses an ephemeral keychain per build). Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
 
 To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.json`. The easiest path is:
 
@@ -642,9 +635,6 @@ The file looks like:
 ```
 
 iOS IPA upload uses `username` + `password` via `xcrun altool --upload-app`. `category` / `identity` matter more for macOS Electron signing/notarization.
-#### Cordova
-
-Set `packager: "cordova"` on an `android` or `ios` platform to use Cordova instead of Capacitor. Requires the Android and Apple package requirements above.
 
 #### Steam (`steam`, `steam-dev`)
 

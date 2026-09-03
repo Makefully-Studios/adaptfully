@@ -6,7 +6,6 @@ import path from 'node:path';
 import {
     buildElectronMain,
     CapacitorPackager,
-    CordovaPackager,
     createPackagerForPlatform,
     ElectronPackager,
     normalizeSocialLoginConfig,
@@ -132,18 +131,18 @@ describe('packagers', () => {
             config: {
                 platforms: {
                     ios: {
-                        packager: 'cordova',
+                        packager: 'capacitor',
                         registrations: { auth: 'dev-auth', save: 'localStorage' },
                     },
                     android: {
-                        packager: 'cordova',
+                        packager: 'capacitor',
                         registrations: { auth: 'google-auth' },
                     },
                 },
             },
         };
 
-        const packager = new CordovaPackager(pkg, { platformKey: 'ios' });
+        const packager = new CapacitorPackager(pkg, { platformKey: 'ios' });
         assert.deepEqual([...packager.collectUsedPlugins()].sort(), [
             'dev-auth',
             'google-auth',
@@ -151,6 +150,19 @@ describe('packagers', () => {
         ]);
         assert.equal(packager.usesPlugin('dev-auth'), true);
         assert.equal(packager.usesPlugin('steam-auth'), false);
+    });
+
+    it('rejects cordova packager', () => {
+        assert.throws(
+            () => createPackagerForPlatform('android', {
+                config: {
+                    platforms: {
+                        android: { packager: 'cordova' },
+                    },
+                },
+            }),
+            /Invalid packager "cordova"/,
+        );
     });
 
     it('detects steam-auth on the active platform for electron', () => {
@@ -283,8 +295,8 @@ describe('prebuild packager templates', () => {
         assert.ok(!fs.existsSync(path.join(dest, 'main.js')));
     });
 
-    it('writes cordova.js, game-config.js, and HTML extras for cordova packager', () => {
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-cordova-'));
+    it('writes game-config.js and HTML extras for capacitor packager', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-capacitor-basic-'));
         const deploy = path.join(tmp, 'deploy');
         const outputRoot = path.join(tmp, 'output');
         fs.mkdirSync(deploy, { recursive: true });
@@ -300,7 +312,7 @@ describe('prebuild packager templates', () => {
                 title: 'Sample Game',
                 platforms: {
                     android: {
-                        packager: 'cordova',
+                        packager: 'capacitor',
                         registrations: { auth: 'dev-auth' },
                     },
                 },
@@ -312,8 +324,6 @@ describe('prebuild packager templates', () => {
         const html = fs.readFileSync(path.join(dest, 'index.html'), 'utf8');
         const gameConfig = fs.readFileSync(path.join(dest, 'game-config.js'), 'utf8');
 
-        assert.ok(fs.existsSync(path.join(dest, 'cordova.js')));
-        assert.match(html, /<script src="cordova\.js"><\/script>/);
         assert.match(html, /<script src="game-config\.js"><\/script>/);
         assert.match(html, /Content-Security-Policy/);
         assert.match(gameConfig, /"platform": "android"/);
@@ -353,7 +363,6 @@ describe('prebuild packager templates', () => {
         const socialConfig = fs.readFileSync(path.join(dest, 'social-login-config.js'), 'utf8');
         const gameConfig = fs.readFileSync(path.join(dest, 'game-config.js'), 'utf8');
 
-        assert.ok(!fs.existsSync(path.join(dest, 'cordova.js')));
         assert.match(html, /<script src="social-login-config\.js"><\/script>/);
         assert.match(html, /<script src="game-config\.js"><\/script>/);
         assert.match(html, /Content-Security-Policy/);

@@ -20,11 +20,4 @@ describe('resolveWrapfullyRoute', () => {
             'electron',
         );
     });
-
-    it('posts cordova packager single targets to the target route', () => {
-        assert.equal(
-            resolveWrapfullyRoute({ family: 'cordova', targets: ['android'] }),
-            'android',
-        );
-    });
 });
