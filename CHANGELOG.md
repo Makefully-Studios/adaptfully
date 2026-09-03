@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 3.16.1 — 2026-09-03
+
+### Fixed
+
+- **`adaptfully build` signing credentials** — Capacitor/Cordova zip builds now package `assets/meta/deployments/<canonical>/` (e.g. `ios-dev` → `ios`) so Wrapfully can sign device IPAs. Previously only `release` shipped deployment folders, so `ios:dev-build` arrived on the Mac without `apple/development.*`.
+
 ## 3.16.0 — 2026-09-02
 
 ### Added

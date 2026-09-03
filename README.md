@@ -619,7 +619,7 @@ assets/meta/deployments/<deployment>/
   apple/development.mobileprovision   # ios-dev device
 ```
 
-The `.p12` passphrase must match `MAC_KEYCHAIN_PASSWORD` on the Mac Wrapfully host. Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
+`adaptfully build` (zip-only) still packages this deployment folder for Capacitor/Cordova so device debug builds can sign. The `.p12` passphrase must match `MAC_KEYCHAIN_PASSWORD` on the Mac Wrapfully host. Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
 
 Optional `build.json` may still be present for tooling compatibility; Capacitor does not require its `ios.*` code-sign fields.
 

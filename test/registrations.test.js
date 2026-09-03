@@ -1,10 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
     buildAdaptfullyInjection,
     injectAdaptfullyRegistrations,
     adaptfullyInjectionForPlatform,
+    resolveBuildCredentialDirs,
     resolveBuildSpec,
     resolveDeploymentsForPlatform,
     resolveFamily,
@@ -236,5 +239,31 @@ describe('registrations', () => {
             resolvePublishDir('web-prod'),
             path.join('assets/meta', 'deployments', 'web-prod'),
         );
+    });
+
+    it('resolves build signing credential dirs for capacitor ios-dev → ios', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    ios: { packager: 'capacitor', deployments: ['zip', 'ios'] },
+                    'ios-dev': { packager: 'capacitor', builder: 'ios-dev', deployments: ['zip'] },
+                    web: { packager: 'web', deployments: ['zip', 'web-prod'] },
+                },
+            },
+        };
+        const metaDir = path.join(tmpdir(), `adaptfully-creds-${Date.now()}`);
+        const iosDir = path.join(metaDir, 'deployments', 'ios');
+        mkdirSync(iosDir, { recursive: true });
+
+        assert.deepEqual(
+            resolveBuildCredentialDirs('ios-dev', pkg, metaDir),
+            [path.resolve(iosDir)],
+        );
+        assert.deepEqual(
+            resolveBuildCredentialDirs('web', pkg, metaDir),
+            [],
+        );
+
+        rmSync(metaDir, { recursive: true, force: true });
     });
 });
