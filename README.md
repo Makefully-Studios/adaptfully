@@ -29,6 +29,8 @@ adaptfully deploy steam                       # prebuild + POST to Wrapfully ste
 adaptfully steam-publish                      # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
 adaptfully google-publish --from ./sa.json    # one-time: import Play service account → deployments/android/google.json
 adaptfully apple-publish                      # one-time: write App Store Connect creds → deployments/ios/apple.json
+adaptfully android-keystore                   # one-time: generate keystores + android build.json
+adaptfully apple-signing                      # one-time: CSR / .p12 / provisioning files under ios/apple/
 ```
 
 | Stage | What it does |
@@ -39,6 +41,10 @@ adaptfully apple-publish                      # one-time: write App Store Connec
 | `steam-publish` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` (also updates `.gitignore`) |
 | `google-publish` | One-time local setup: import a Play Console service-account JSON into the `android` deployment folder (also updates `.gitignore`) |
 | `apple-publish` | One-time local setup: write App Store Connect credentials into the `ios` deployment folder (also updates `.gitignore`) |
+| `android-keystore` | One-time local setup: generate debug/release keystores and write `android` `build.json` (also updates `.gitignore`) |
+| `apple-signing` | One-time local setup: CSR → Apple `.cer` → `.p12` / provisioning profiles under `ios/apple/` (also updates `.gitignore`) |
+
+First-time walkthroughs (manual steps + helper skip markers): [docs/credentials/](docs/credentials/README.md).
 
 `wrapfully-deploy` is a compatibility alias for `adaptfully deploy` when invoked with a Wrapfully builder name (`steam`, `win`, `android`, etc.).
 
@@ -547,9 +553,13 @@ For a single platform, pass the specific builder name.
 
 ### Platform package requirements
 
+**First-time setup:** see [docs/credentials/](docs/credentials/README.md) for iOS, Android, and Steam walkthroughs (CLI helpers + full manual steps).
+
 Signing keys, provisioning profiles, and store credentials go in the deployment folder `./assets/meta/deployments/<deployment>/` on disk (the selected deployment is sent as `meta/publish/` in the zip). The examples below use `<deployment>` as a placeholder for the target key (e.g. `steam`, `web-prod`). **These files contain secrets** — add them to `.gitignore` and never commit them to a public repository. (Projects that have not adopted the `deployments/` layout may still place these under the legacy `./assets/meta/publish/`.)
 
 #### Android (`android`, `android-dev`)
+
+First-time setup: [docs/credentials/android.md](docs/credentials/android.md) (`android-keystore`, `google-publish`).
 
 Place keystore files in `assets/meta/deployments/<deployment>/android/`. Include `assets/meta/deployments/<deployment>/build.json`:
 
@@ -602,6 +612,8 @@ The file looks like:
 
 #### Apple (`ios`, `ios-dev`, `ios-sim`, `mac`)
 
+First-time setup: [docs/credentials/ios.md](docs/credentials/ios.md) (`apple-signing`, `apple-publish`).
+
 **Capacitor iOS** signing is file-based under the deployment folder:
 
 ```
@@ -614,7 +626,7 @@ assets/meta/deployments/<deployment>/
   build.json                          # optional: { "apple": { "p12Password": "..." } }
 ```
 
-`adaptfully build` (zip-only) still packages this deployment folder for Capacitor so device debug builds can sign. Optional `build.json` may set `apple.p12Password` for the `.p12` passphrase (Wrapfully uses an ephemeral keychain per build). Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
+`adaptfully build` (zip-only) still packages this deployment folder for Capacitor so device debug builds can sign. Optional `build.json` may set `apple.p12Password` for the `.p12` passphrase (defaults to empty when omitted). Team ID and profile UUID are read from the `.mobileprovision`. Enable **Sign in with Apple** on the App ID when using Capgo Apple auth.
 
 To deploy to the App Store, include `assets/meta/deployments/<deployment>/apple.json`. The easiest path is:
 
@@ -637,6 +649,8 @@ The file looks like:
 iOS IPA upload uses `username` + `password` via `xcrun altool --upload-app`. `category` / `identity` matter more for macOS Electron signing/notarization.
 
 #### Steam (`steam`, `steam-dev`)
+
+First-time setup: [docs/credentials/steam.md](docs/credentials/steam.md) (`steam-publish`).
 
 `steam-dev` builds debug Electron binaries for Windows, Mac, and Linux without uploading to Steam. No `steam.json` credentials are required.
 

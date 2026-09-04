@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 4.1.0 — 2026-09-04
+
+### Added
+
+- **`adaptfully android-keystore`** — Generate debug/release keystores with `keytool` and write `assets/meta/deployments/android/build.json`.
+- **`adaptfully apple-signing`** — Generate CSR/key (OpenSSL), export `.p12` from an Apple `.cer`, place provisioning profiles under `ios/apple/`, optional `apple.p12Password` in `build.json`.
+- **Credential setup guides** — First-time walkthroughs under [`docs/credentials/`](docs/credentials/README.md) for iOS, Android, and Steam (full manual steps + helper skip markers).
+
 ## 4.0.0 — 2026-09-03
 
 ### Removed
