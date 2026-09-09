@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 4.2.1 — 2026-09-09
+
+### Fixed
+
+- Yap status poll logs only when the status message changes (same as Dutifully), instead of repeating every poll interval.
+- Clearer errors when a chore download/decrypt/unpack fails (helps diagnose truncated Showfully responses).
+
 ## 4.2.0 — 2026-09-08
 
 ### Changed
