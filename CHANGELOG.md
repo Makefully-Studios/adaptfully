@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## 4.2.0 — 2026-09-08
+
+### Changed
+
+- **Build / deploy / release** submit **Showfully Yap** chores (`POST /yap/wrapfully`) instead of direct Wrapfully HTTP. Requires a Showfully PAT (`SHOWFULLY_PAT` / `wrapfully.json` `accessToken`).
+- Server URL defaults to Showfully (`https://make.makefullystudios.com/`); `wrapfully.json` may set `showfullyServer` or `server`.
+
+### Added
+
+- Optional `--encrypt` / `"encrypt": true` chore envelope encryption (default Wrapfully fleet public key; override with `--encrypt-public-key`).
+- `wrapfully.json` routing fields appended to Yap zips (`stage`, `route`, `platformKey`, `gameId`, `deploymentKey`).
+
 ## 4.1.0 — 2026-09-04
 
 ### Added

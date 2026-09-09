@@ -21,28 +21,33 @@ Games register platform services before load and retrieve them in-game. Adaptful
 ### Pipeline stages
 
 ```bash
-adaptfully prebuild web                       # deploy/ → output/web-prebuild/
-adaptfully build steam                        # prebuild + zip and send to Wrapfully (default deployment)
-adaptfully deploy web                         # prebuild + POST to Wrapfully for each of web's deployments
-adaptfully deploy web --deployment web-prod   # deploy to a single named deployment
-adaptfully deploy steam                       # prebuild + POST to Wrapfully steam builder
+# wrapfully.json (gitignored) or env — Showfully PAT required for build/deploy/release:
+#   { "accessToken": "sfpat_…", "server": "https://make.makefullystudios.com/" }
+#   optional: "encrypt": true
+
+export SHOWFULLY_PAT=sfpat_…
+adaptfully prebuild web                       # deploy/ → output/web-prebuild/ (local only)
+adaptfully build steam                        # Yap /yap/wrapfully chore → artifact zip
+adaptfully deploy web --deployment web-prod   # Yap deploy chore
+adaptfully release android --encrypt          # optional envelope encryption
 adaptfully steam-publish                      # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
-adaptfully google-publish --from ./sa.json    # one-time: import Play service account → deployments/android/google.json
-adaptfully apple-publish                      # one-time: write App Store Connect creds → deployments/ios/apple.json
-adaptfully android-keystore                   # one-time: generate keystores + android build.json
-adaptfully apple-signing                      # one-time: CSR / .p12 / provisioning files under ios/apple/
 ```
 
 | Stage | What it does |
 |-------|----------------|
 | `prebuild` | Copy `deploy/` to `output/<platform>-prebuild/` and inject registrations into `config.htmlInjections` |
-| `build` | Prebuild, then POST the result to Wrapfully (artifact zip only) |
-| `deploy` | POST the prior build artifact from `./output/` to each configured deployment (or `--deployment`) |
+| `build` | Prebuild, then submit a **Showfully Yap** `wrapfully` chore (PAT required); poll until the artifact zip returns |
+| `deploy` | Submit a Yap deploy chore with the prior build artifact + deployment credentials |
+| `release` | Yap release chore (build + configured deployments on Wrapfully) |
 | `steam-publish` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` (also updates `.gitignore`) |
 | `google-publish` | One-time local setup: import a Play Console service-account JSON into the `android` deployment folder (also updates `.gitignore`) |
 | `apple-publish` | One-time local setup: write App Store Connect credentials into the `ios` deployment folder (also updates `.gitignore`) |
 | `android-keystore` | One-time local setup: generate debug/release keystores and write `android` `build.json` (also updates `.gitignore`) |
 | `apple-signing` | One-time local setup: CSR → Apple `.cer` → `.p12` / provisioning profiles under `ios/apple/` (also updates `.gitignore`) |
+
+**Server** means the Showfully Yap base (`SHOWFULLY_SERVER` / `wrapfully.json` `showfullyServer` or `server`), default `https://make.makefullystudios.com/`. Wrapfully workers claim chores with a separate service token.
+
+**Encryption (optional):** `--encrypt` or `"encrypt": true` wraps the chore to the Makefully Wrapfully fleet public key (override with `--encrypt-public-key`). Results are decrypted locally with an ephemeral `resultPriv` kept only for that chore.
 
 First-time walkthroughs (manual steps + helper skip markers): [docs/credentials/](docs/credentials/README.md).
 
