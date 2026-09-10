@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 4.2.2 — 2026-09-10
+
+### Added
+
+- While a Wrapfully Yap chore is pending, poll `GET /yap/wrapfully/:choreId/logs` and print new live worker log lines.
+
 ## 4.2.1 — 2026-09-09
 
 ### Fixed
