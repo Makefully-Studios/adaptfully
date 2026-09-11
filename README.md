@@ -30,7 +30,7 @@ adaptfully prebuild web                       # deploy/ → output/web-prebuild/
 adaptfully build steam                        # Yap /yap/wrapfully chore → artifact zip
 adaptfully deploy web --deployment web-prod   # Yap deploy chore
 adaptfully release android --encrypt          # optional envelope encryption
-adaptfully release steam,android,ios          # sequential platforms; extracts to output/<platform>/
+adaptfully release steam,android,ios          # sequential platforms; each → output/<platform>/
 adaptfully release --platforms steam,android  # same, flag form
 adaptfully steam-publish                      # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
 ```
@@ -47,7 +47,7 @@ adaptfully steam-publish                      # one-time: log in with steamcmd �
 | `android-keystore` | One-time local setup: generate debug/release keystores and write `android` `build.json` (also updates `.gitignore`) |
 | `apple-signing` | One-time local setup: CSR → Apple `.cer` → `.p12` / provisioning profiles under `ios/apple/` (also updates `.gitignore`) |
 
-Comma-separated platforms (or `--platforms`) run **sequentially**. Multi-platform extracts go to `output/<platform>/` so sibling results are not overwritten; only that folder’s prior `artifacts/` / status files are cleared before each extract. A single platform still extracts to `output/` for backward compatibility.
+Comma-separated platforms (or `--platforms`) run **sequentially**. Build/deploy/release extracts always go to `output/<platform>/` so sibling results are not overwritten; only that folder’s prior `artifacts/` / status files are cleared before each extract.
 
 **Server** means the Showfully Yap base (`SHOWFULLY_SERVER` / `wrapfully.json` `showfullyServer` or `server`), default `https://make.makefullystudios.com/`. Wrapfully workers claim chores with a separate service token.
 
@@ -283,7 +283,7 @@ import {
 
 ## Wrapfully deploy
 
-After prebuild, the build and deploy stages zip `output/<platform>-prebuild/` and POST it to a Wrapfully build server. Artifacts are saved to `./output/`.
+After prebuild, the build and deploy stages zip `output/<platform>-prebuild/` and POST it to a Wrapfully build server. Artifacts are saved to `./output/<platform>/`.
 
 ## Quick start
 
@@ -322,7 +322,7 @@ npx adaptfully apple-publish [--deployment ios] [--category C] [--identity I] [-
 |----------|---------|-------------|
 | `platform` | — | Platform key from `config.platforms` (`web`, `steam`, etc.) |
 | `server` | see below | Wrapfully server base URL (`build` and `deploy` only) |
-| `mode` | `extract` | `extract` unpacks the response zip into `./output/`; any other value saves `./output/{name}-{version}-{builder}.zip` |
+| `mode` | `extract` | `extract` unpacks the response zip into `./output/<platform>/`; any other value saves `./output/<platform>/{name}-{version}-{builder}.zip` |
 
 Examples:
 
@@ -402,7 +402,9 @@ mygame/
 │   └── index.html
 ├── output/
 │   ├── web-prebuild/     # after adaptfully prebuild web
-│   └── steam-prebuild/   # after adaptfully prebuild steam
+│   ├── steam-prebuild/   # after adaptfully prebuild steam
+│   ├── web/              # after adaptfully build/release web
+│   └── steam/            # after adaptfully build/release steam
 └── assets/
     └── meta/                    # shared files packaged as meta/ in the zip
         ├── icon-foreground.png
@@ -727,7 +729,7 @@ To sign the app, place your certificate at `assets/meta/deployments/<deployment>
 
 ## Response
 
-The server responds with a zip stream containing build artifacts (`.apk`, `.aab`, `.ipa`, `.app`, `.exe`, etc.) and optional status files. By default the client extracts this into `./output/`. Use a non-`extract` mode value to save the raw response zip instead.
+The server responds with a zip stream containing build artifacts (`.apk`, `.aab`, `.ipa`, `.app`, `.exe`, etc.) and optional status files. By default the client extracts this into `./output/<platform>/`. Use a non-`extract` mode value to save the raw response zip instead.
 
 Every build also includes `wrapfully-status.json` with structured `success`, `warn`, and `error` events. The client prints these after extraction and exits with code 1 if any errors were reported, so build failures do not crash the server silently.
 

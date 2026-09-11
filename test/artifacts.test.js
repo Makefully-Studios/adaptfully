@@ -86,16 +86,17 @@ describe('artifacts', () => {
         assert.equal(fs.existsSync(path.join(root, 'keep-me.txt')), true);
     });
 
-    it('resolves multi-platform extract roots under output/<platform>/', () => {
+    it('resolves extract roots under output/<platform>/', () => {
         const root = path.resolve('output');
         assert.equal(
-            resolveExtractRoot(root, 'steam', { multiPlatform: true }),
+            resolveExtractRoot(root, 'steam'),
             path.join(root, 'steam'),
         );
         assert.equal(
-            resolveExtractRoot(root, 'steam', { multiPlatform: false }),
-            root,
+            resolveExtractRoot(root, 'web'),
+            path.join(root, 'web'),
         );
+        assert.equal(resolveExtractRoot(root), root);
     });
 
     it('parses comma-separated platform lists', () => {

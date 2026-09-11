@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.0 — 2026-09-11
+
+### Changed
+
+- **Breaking:** Wrapfully extracts always land in `output/<platform>/` (including single-platform `build` / `release` / `deploy`). Sequential runs no longer overwrite siblings. Deploy still falls back to a legacy flat `output/` artifact if present.
+
 ## 4.3.0 — 2026-09-11
 
 ### Added
