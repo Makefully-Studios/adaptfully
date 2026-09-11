@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 4.3.0 — 2026-09-11
+
+### Added
+
+- **Sequential multi-platform stages** — `adaptfully release steam,android,ios` (or `--platforms steam,android,ios`) runs each platform in order. Failures are collected; the command exits non-zero if any platform failed.
+- Multi-platform extracts land in `output/<platform>/` so sibling results are preserved. Only that folder’s prior `artifacts/` / wrapfully status files are cleared before each extract (single-platform still uses `output/`).
+
+### Changed
+
+- Build report failures throw instead of calling `process.exit`, so sequential platform runs can continue and report a summary.
+
 ## 4.2.2 — 2026-09-10
 
 ### Added

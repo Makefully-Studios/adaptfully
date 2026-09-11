@@ -30,6 +30,8 @@ adaptfully prebuild web                       # deploy/ → output/web-prebuild/
 adaptfully build steam                        # Yap /yap/wrapfully chore → artifact zip
 adaptfully deploy web --deployment web-prod   # Yap deploy chore
 adaptfully release android --encrypt          # optional envelope encryption
+adaptfully release steam,android,ios          # sequential platforms; extracts to output/<platform>/
+adaptfully release --platforms steam,android  # same, flag form
 adaptfully steam-publish                      # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
 ```
 
@@ -44,6 +46,8 @@ adaptfully steam-publish                      # one-time: log in with steamcmd �
 | `apple-publish` | One-time local setup: write App Store Connect credentials into the `ios` deployment folder (also updates `.gitignore`) |
 | `android-keystore` | One-time local setup: generate debug/release keystores and write `android` `build.json` (also updates `.gitignore`) |
 | `apple-signing` | One-time local setup: CSR → Apple `.cer` → `.p12` / provisioning profiles under `ios/apple/` (also updates `.gitignore`) |
+
+Comma-separated platforms (or `--platforms`) run **sequentially**. Multi-platform extracts go to `output/<platform>/` so sibling results are not overwritten; only that folder’s prior `artifacts/` / status files are cleared before each extract. A single platform still extracts to `output/` for backward compatibility.
 
 **Server** means the Showfully Yap base (`SHOWFULLY_SERVER` / `wrapfully.json` `showfullyServer` or `server`), default `https://make.makefullystudios.com/`. Wrapfully workers claim chores with a separate service token.
 

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, it } from 'node:test';
-import { buildOutputDir, clearStaleBuildExtract, resolveBuildArtifactDir } from '../lib/node/artifacts.js';
+import { buildOutputDir, clearStaleBuildExtract, parsePlatformList, resolveBuildArtifactDir, resolveExtractRoot } from '../lib/node/artifacts.js';
 
 describe('artifacts', () => {
     /** @type {string[]} */
@@ -84,5 +84,41 @@ describe('artifacts', () => {
         assert.equal(fs.existsSync(path.join(root, 'wrapfully-build.json')), false);
         assert.equal(fs.existsSync(path.join(root, 'wrapfully-status.json')), false);
         assert.equal(fs.existsSync(path.join(root, 'keep-me.txt')), true);
+    });
+
+    it('resolves multi-platform extract roots under output/<platform>/', () => {
+        const root = path.resolve('output');
+        assert.equal(
+            resolveExtractRoot(root, 'steam', { multiPlatform: true }),
+            path.join(root, 'steam'),
+        );
+        assert.equal(
+            resolveExtractRoot(root, 'steam', { multiPlatform: false }),
+            root,
+        );
+    });
+
+    it('parses comma-separated platform lists', () => {
+        assert.deepEqual(parsePlatformList('steam, android, ios'), ['steam', 'android', 'ios']);
+        assert.deepEqual(parsePlatformList('web'), ['web']);
+        assert.deepEqual(parsePlatformList(''), []);
+    });
+
+    it('finds prior build artifacts under output/<platform>/', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-artifact-platform-'));
+        tmpDirs.push(root);
+        const outputDir = path.join(root, 'output');
+        const steamDir = path.join(outputDir, 'steam');
+        fs.mkdirSync(steamDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(steamDir, 'wrapfully-build.json'),
+            JSON.stringify({ gameId: 'game-1.0.0', platformKey: 'steam' }),
+        );
+        const pkg = { name: 'game', version: '1.0.0', config: { outputFolder: outputDir } };
+
+        assert.equal(
+            resolveBuildArtifactDir(pkg, { platformKey: 'steam' }),
+            steamDir,
+        );
     });
 });
