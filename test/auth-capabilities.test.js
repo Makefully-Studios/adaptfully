@@ -19,6 +19,21 @@ function loadPlatform(authScripts, registerExpr) {
         remove(key) { delete this.data[key]; },
     };
 
+    const google = {
+        accounts: {
+            oauth2: {
+                initTokenClient() {
+                    return {
+                        callback: null,
+                        requestAccessToken() {
+                            this.callback({ error: 'no_session' });
+                        },
+                    };
+                },
+            },
+        },
+    };
+
     const context = {
         adaptfully: undefined,
         console,
@@ -34,25 +49,13 @@ function loadPlatform(authScripts, registerExpr) {
             setTimeout,
             clearTimeout,
         },
-        google: {
-            accounts: {
-                oauth2: {
-                    initTokenClient() {
-                        return {
-                            callback: null,
-                            requestAccessToken() {
-                                this.callback({ error: 'no_session' });
-                            },
-                        };
-                    },
-                },
-            },
-        },
+        google,
         fetch: () => Promise.reject(new Error('fetch unavailable in test')),
         setTimeout,
         clearTimeout,
     };
     context.window.adaptfully = context.adaptfully;
+    context.window.google = google;
 
     const scripts = ['core.js', 'platform.js', 'auth/_helpers.js', ...authScripts.map((s) => `auth/${s}`)];
     for (const rel of scripts) {
@@ -63,7 +66,9 @@ function loadPlatform(authScripts, registerExpr) {
     }
 
     context.adaptfully.register('storage', storage);
-    context.adaptfully.register('config', {});
+    context.adaptfully.register('config', {
+        googleClientId: 'test-gis.apps.googleusercontent.com',
+    });
     vm.runInNewContext(registerExpr, context);
 
     return context.adaptfully.get('auth');

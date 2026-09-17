@@ -136,7 +136,7 @@ Games should call `adaptfully.has('analytics')` before `get` during rollout if o
 
 | Plugin key | Registration | Runtime |
 |------------|--------------|---------|
-| `google-auth` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web, Android, iOS |
+| `google-auth` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web (Google Identity Services) |
 | `steam-auth` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron (via [steamworks.js](https://github.com/ceifa/steamworks.js)) |
 | `social-auth` | `adaptfully.register('auth', adaptfully.auth.Social)` | Capacitor (via [@capgo/capacitor-social-login](https://github.com/Cap-go/capacitor-social-login)) |
 | `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local / testing |
@@ -188,6 +188,13 @@ Android/iOS Wrapfully builds use the **`capacitor`** builder family. Cordova/Pho
 
 **`social-auth` requires `packager: "capacitor"`** and `platforms.<name>.socialLogin` (Capgo provider client IDs). Wrapfully installs `@capgo/capacitor-social-login` when building.
 
+Google client IDs are **not** interchangeable across plugins:
+
+| Surface | Config | Notes |
+|---------|--------|--------|
+| Browser GIS (`google-auth`) | `config.googleClientId` (via your config registration / bridge) | OAuth **Web** client whose authorized JavaScript origins include the site origin |
+| Capacitor Capgo (`social-auth`) | `platforms.<name>.socialLogin.google.webClientId` | Server / web client id for native Google Sign-In — do **not** put this in `googleClientId` |
+
 ```json
 {
   "config": {
@@ -220,6 +227,19 @@ Android/iOS Wrapfully builds use the **`capacitor`** builder family. Cordova/Pho
 }
 ```
 
+#### Google auth (`google-auth`)
+
+Browser-only plugin using [Google Identity Services](https://developers.google.com/identity/oauth2/web/guides/overview) (`accounts.google.com/gsi/client`). Requires `config.googleClientId` — there is no built-in default. GIS authorized origins are **per OAuth client**; reusing `socialLogin.google.webClientId` here is a common failure mode when mobile and web need different clients.
+
+Optional config keys:
+
+| Key | Default | Purpose |
+|-----|---------|---------|
+| `googleClientId` | *(required)* | Browser GIS OAuth client id |
+| `googleTokenKey` | `adaptfully_google_token` | `sessionStorage` key for the access token |
+| `googleScopes` | `openid email profile` | OAuth scopes |
+| `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the user id on login |
+
 #### Steam auth (`steam-auth`)
 
 When `steam-auth` is registered on an **`electron`** platform, Adaptfully prebuild writes:
@@ -241,6 +261,8 @@ When `social-auth` is registered on a **`capacitor`** platform, Adaptfully prebu
 The runtime plugin calls Capgo `SocialLogin.initialize` / `login` / `logout` / `isLoggedIn`. Default provider is `google` on Android and `apple` on iOS when both are enabled (override with `socialLogin.defaultProvider`).
 
 **Apple-only iOS** (`providers.google: false`, `providers.apple: true`) is supported — Google `webClientId` is not required. On iOS, if `apple.clientId` is omitted, Adaptfully defaults it to the platform `packageName` (Capgo uses this as a plugin label on native iOS, not an Apple Services ID). On Android, Apple Sign-In still requires `apple.clientId`. At runtime, an empty Apple `clientId` also falls back to `window.gameConfig.packageName`.
+
+Google Sign-In on Capacitor reads **`socialLogin.google.webClientId` only** (via `social-login-config.js`). It does not fall back to `config.googleClientId`.
 
 Optional config keys:
 

@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.1 — 2026-09-17
+
+### Changed
+
+- **`google-auth`** requires `config.googleClientId` (no built-in Entanglement client id default).
+- **`social-auth`** no longer falls back to `config.googleClientId` for Capgo `webClientId` — use `platforms.<name>.socialLogin.google.webClientId` only.
+- Docs: browser GIS vs Capacitor Google client ids are documented as separate fan-out surfaces.
+
 ## 5.0.0 — 2026-09-11
 
 ### Changed
