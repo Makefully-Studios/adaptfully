@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.3 — 2026-10-05
+
+### Changed
+
+- **Web packager** writes `game-config.js` (and injects the script) for **web** and **pwa** as well as **uwp**, so `window.gameConfig.version` / platform are stamped on every web-family route — matching electron and capacitor. HTTP analytics can then populate batch `appVersion` without a per-game `analyticsAppVersion` override.
+
 ## 5.0.2 — 2026-10-05
 
 ### Fixed

@@ -178,7 +178,7 @@ Each platform entry may set a **`packager`** (`web`, `electron`, or `capacitor`)
 
 | Packager | Prebuild adds |
 |----------|---------------|
-| `web` | `game-config.js` for **`uwp`** platform prebuilds |
+| `web` | `game-config.js` for **web / uwp / pwa** platform prebuilds (version + platform for analytics) |
 | `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** is registered |
 | `capacitor` | `game-config.js`, Capacitor CSP/viewport; `social-login-config.js` when **`social-auth`** is registered |
 

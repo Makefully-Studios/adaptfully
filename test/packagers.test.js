@@ -295,6 +295,41 @@ describe('prebuild packager templates', () => {
         assert.ok(!fs.existsSync(path.join(dest, 'main.js')));
     });
 
+    it('writes game-config.js for web and pwa platform prebuilds', () => {
+        for (const platformKey of ['web', 'pwa']) {
+            const tmp = fs.mkdtempSync(path.join(os.tmpdir(), `adaptfully-${platformKey}-`));
+            const deploy = path.join(tmp, 'deploy');
+            const outputRoot = path.join(tmp, 'output');
+            fs.mkdirSync(deploy, { recursive: true });
+            fs.writeFileSync(
+                path.join(deploy, 'index.html'),
+                '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>',
+            );
+
+            const pkg = {
+                name: 'sample-game',
+                version: '8.4.7',
+                config: {
+                    title: 'Sample Game',
+                    platforms: {
+                        [platformKey]: {
+                            registrations: { auth: 'dev-auth' },
+                        },
+                    },
+                    outputFolder: outputRoot,
+                },
+            };
+
+            const dest = prebuildPlatform(deploy, platformKey, pkg, { log: () => {} });
+            const html = fs.readFileSync(path.join(dest, 'index.html'), 'utf8');
+            const gameConfig = fs.readFileSync(path.join(dest, 'game-config.js'), 'utf8');
+
+            assert.match(html, /<script src="game-config\.js"><\/script>/);
+            assert.match(gameConfig, new RegExp(`"platform": "${platformKey}"`));
+            assert.match(gameConfig, /"version": "8\.4\.7"/);
+        }
+    });
+
     it('writes game-config.js and HTML extras for capacitor packager', () => {
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-capacitor-basic-'));
         const deploy = path.join(tmp, 'deploy');
@@ -440,6 +475,7 @@ describe('prebuild packager templates', () => {
 
         assert.match(html, /<script src="game-config\.js"><\/script>/);
         assert.match(gameConfig, /"platform": "ms"/);
+        assert.match(gameConfig, /"version": "1\.0\.0"/);
     });
 
     it('allows Apple-only iOS socialLogin without Google webClientId', () => {
