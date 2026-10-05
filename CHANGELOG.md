@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.2 — 2026-10-05
+
+### Fixed
+
+- Wrapfully chore downloads stream to a temp `.zip` on disk and extract with **yauzl** (lazy file streams) instead of buffering the whole Electron/Steam artifact in RAM via `axios` `arraybuffer` + `unzip-stream` MatcherStream (Node heap OOM despite free system RAM).
+- Encrypted result envelopes decrypt with streamed AES-GCM (`aesDecryptFile`) to a plaintext zip file before extract.
+
 ## 5.0.1 — 2026-09-17
 
 ### Changed
