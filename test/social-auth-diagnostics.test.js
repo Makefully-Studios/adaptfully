@@ -93,4 +93,31 @@ describe('social-auth diagnostics', () => {
         assert.ok(String(ctx.googleWebClientId).includes('…'));
         assert.equal(ctx.hasSocialLoginPlugin, true);
     });
+
+    it('passes filterByAuthorizedAccounts false for Google login', async () => {
+        const loginRequests = [];
+        const plugin = {
+            async initialize() {},
+            async login(request) {
+                loginRequests.push(request);
+                return {
+                    result: {
+                        profile: { id: 'sub-1', email: 'a@example.com' },
+                    },
+                };
+            },
+        };
+
+        const { auth } = loadSocialAuth(plugin);
+        await new Promise((resolve) => {
+            auth.whenReady(() => {
+                auth.login(() => resolve());
+            });
+        });
+
+        assert.equal(loginRequests.length, 1);
+        assert.equal(loginRequests[0].provider, 'google');
+        assert.equal(loginRequests[0].options.filterByAuthorizedAccounts, false);
+        assert.equal(loginRequests[0].options.scopes.join(','), 'email,profile');
+    });
 });

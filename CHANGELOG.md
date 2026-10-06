@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.5 — 2026-10-06
+
+### Changed
+
+- **`social-auth`** Google login on Capacitor now passes `filterByAuthorizedAccounts: false` (Capgo/Family Link guidance) so Credential Manager does not stick to a stale authorized-account filter that surfaces `[16] Account reauth failed`.
+
 ## 5.0.4 — 2026-10-06
 
 ### Changed
