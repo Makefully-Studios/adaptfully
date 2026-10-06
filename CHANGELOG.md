@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.4 — 2026-10-06
+
+### Changed
+
+- **`social-auth`** logs richer Capgo/Android login diagnostics: structured error dumps when the bridge returns an empty-message `Error`, plus safe context (platform, provider, masked `webClientId`, plugin presence, result keys on identity-map failures).
+
 ## 5.0.3 — 2026-10-05
 
 ### Changed
