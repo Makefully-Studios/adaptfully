@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.7 — 2026-10-07
+
+### Added
+
+- Gitignore patterns for `assets/meta/deployments/**/s3.json` and `**/showfully.json`.
+- Docs for web deploy via SFTP (atomic `cleanRemote`), AWS S3, and Showfully folder (credential shapes consumed by Wrapfully).
+
 ## 5.0.6 — 2026-10-07
 
 ### Changed

@@ -437,11 +437,17 @@ mygame/
             │   └── sftp.json
             ├── web-prod/
             │   └── sftp.json
+            ├── web-s3-prod/
+            │   ├── manifest.json   # { "type": "s3" }
+            │   └── s3.json
+            ├── web-showfully/
+            │   ├── manifest.json   # { "type": "showfully" }
+            │   └── showfully.json
             └── steam/           # default deployment for the `steam` platform
                 └── steam.json
 ```
 
-The selected deployment's folder is shipped as `meta/publish/` in the zip, so per-platform credential file names (`build.json`, `sftp.json`, `steam.json`, `apple.json`, `google.json`, `ms.json`, `android/`, `ms/`) live inside `assets/meta/deployments/<key>/`.
+The selected deployment's folder is shipped as `meta/publish/` in the zip, so per-platform credential file names (`build.json`, `sftp.json`, `s3.json`, `showfully.json`, `steam.json`, `apple.json`, `google.json`, `ms.json`, `android/`, `ms/`) live inside `assets/meta/deployments/<key>/`.
 
 Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile, desktop, and Steam builds. If either file is missing from `assets/meta/`, Adaptfully **warns** and ships packaged placeholder icons for that build so Wrapfully can still run.
 
@@ -718,7 +724,9 @@ Release `win` builds can be signed with `assets/meta/deployments/<deployment>/ms
 
 #### Web (`web` / `webapp`)
 
-`adaptfully deploy web` prebuilds and POSTs to the Wrapfully **`webapp`** builder (same conduit as Steam). Put an `sftp.json` in each web deployment folder (e.g. `assets/meta/deployments/web-prod/sftp.json`); the selected deployment is zipped as `meta/publish/sftp.json` for Wrapfully to deploy via SFTP. The inner key stays the builder name (`webapp`).
+`adaptfully deploy web` prebuilds and POSTs to the Wrapfully **`webapp`** builder (same conduit as Steam). Each web deployment folder under `assets/meta/deployments/<key>/` is zipped as `meta/publish/` for Wrapfully. Set `manifest.json` `"type"` to `sftp`, `s3`, or `showfully` (or rely on the credential filename). The inner settings key stays the builder name (`webapp`).
+
+**SFTP** — `sftp.json`:
 
 ```json
 {
@@ -736,7 +744,42 @@ Release `win` builds can be signed with `assets/meta/deployments/<deployment>/ms
 }
 ```
 
-See [Wrapfully README](https://github.com/Makefully-Studios/wrapfully-client) for `uploadMode`, `serviceWorker`, `metaWeb`, and `cleanRemote`.
+`path` is the remote site root or a longer subfolder path. With `uploadMode: "direct"` and `cleanRemote: true`, Wrapfully uploads to `[path]-temp`, then deletes the live directory and renames temp → `path` (atomic replace). `cleanRemote` is ignored for `versioned` uploads.
+
+**AWS S3** — `s3.json` + `manifest.json` `{ "type": "s3" }`:
+
+```json
+{
+  "webapp": {
+    "region": "us-east-1",
+    "bucket": "my-games-cdn",
+    "prefix": "",
+    "uploadMode": "direct",
+    "cleanRemote": false,
+    "accessKeyId": "(iam access key)",
+    "secretAccessKey": "(iam secret)"
+  }
+}
+```
+
+`prefix: ""` deploys to the bucket root; `"games/mygame"` deploys under that key prefix. `cleanRemote: true` uses an atomic `prefix-temp` swap (refuses empty prefix unless `allowBucketRootWipe: true`).
+
+**Showfully folder** — `showfully.json` + `manifest.json` `{ "type": "showfully" }`:
+
+```json
+{
+  "webapp": {
+    "server": "https://make.makefullystudios.com/",
+    "folder": "MyGame",
+    "path": "",
+    "accessToken": "sfpat_…"
+  }
+}
+```
+
+`folder` is a top-level Showfully folder name. `path: ""` writes at that folder’s root; `"web"` (or nested) prefixes zip entries under a subfolder. `accessToken` is required (Wrapfully workers cannot reuse the Yap submit PAT).
+
+See [Wrapfully README](https://github.com/Makefully-Studios/wrapfully-client) for `uploadMode`, `serviceWorker`, `metaWeb`, and deployer details.
 
 #### Windows (`win`, `win-dev`, `uwp`)
 

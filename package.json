@@ -1,6 +1,6 @@
 {
     "name": "@makefully/adaptfully",
-    "version": "5.0.6",
+    "version": "5.0.7",
     "description": "Platform abstraction and Wrapfully deploy client for Makefully games",
     "type": "module",
     "main": "./lib/node/index.js",
