@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.6 — 2026-10-07
+
+### Changed
+
+- **`google-auth`** persists the GIS access token in **`localStorage`** by default (was `sessionStorage`), so web sign-in survives browser restarts until explicit logout or Google silent reauth fails. Opt back into tab-only tokens with `config.googleTokenStorage: 'sessionStorage'`. Existing `sessionStorage` tokens are migrated once on read.
+
 ## 5.0.5 — 2026-10-06
 
 ### Changed

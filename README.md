@@ -236,7 +236,8 @@ Optional config keys:
 | Key | Default | Purpose |
 |-----|---------|---------|
 | `googleClientId` | *(required)* | Browser GIS OAuth client id |
-| `googleTokenKey` | `adaptfully_google_token` | `sessionStorage` key for the access token |
+| `googleTokenKey` | `adaptfully_google_token` | Storage key for the GIS access token |
+| `googleTokenStorage` | `localStorage` | `localStorage` (survives browser restart) or `sessionStorage` (tab-only) |
 | `googleScopes` | `openid email profile` | OAuth scopes |
 | `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the user id on login |
 

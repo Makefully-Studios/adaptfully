@@ -7,7 +7,16 @@ import { getRuntimeDir } from '../lib/node/paths.js';
 
 const runtimeDir = getRuntimeDir();
 
-function loadGoogleAuthContext(storageData = {}, config = {}) {
+function createWebStorage() {
+    return {
+        data: {},
+        getItem(k) { return Object.hasOwn(this.data, k) ? this.data[k] : null; },
+        setItem(k, v) { this.data[k] = String(v); },
+        removeItem(k) { delete this.data[k]; },
+    };
+}
+
+function loadGoogleAuthContext(storageData = {}, config = {}, options = {}) {
     const storage = {
         data: { ...storageData },
         get(key) { return this.data[key]; },
@@ -18,6 +27,14 @@ function loadGoogleAuthContext(storageData = {}, config = {}) {
     let tokenPrompt = '';
     let initClientId = '';
     const errors = [];
+    const localStorage = options.localStorage || createWebStorage();
+    const sessionStorage = options.sessionStorage || createWebStorage();
+    if (options.seedLocalToken) {
+        localStorage.setItem(options.seedLocalToken.key, options.seedLocalToken.value);
+    }
+    if (options.seedSessionToken) {
+        sessionStorage.setItem(options.seedSessionToken.key, options.seedSessionToken.value);
+    }
 
     const google = {
         accounts: {
@@ -28,7 +45,16 @@ function loadGoogleAuthContext(storageData = {}, config = {}) {
                         callback: null,
                         requestAccessToken({ prompt }) {
                             tokenPrompt = prompt;
+                            if (typeof options.onRequestAccessToken === 'function') {
+                                options.onRequestAccessToken(this, prompt);
+                                return;
+                            }
                             this.callback({ error: 'no_session' });
+                        },
+                        revoke(_token, done) {
+                            if (typeof done === 'function') {
+                                done();
+                            }
                         },
                     };
                 },
@@ -44,23 +70,21 @@ function loadGoogleAuthContext(storageData = {}, config = {}) {
                 errors.push(args.map(String).join(' '));
             },
         },
-        sessionStorage: {
-            data: {},
-            getItem(k) { return this.data[k] ?? null; },
-            setItem(k, v) { this.data[k] = v; },
-            removeItem(k) { delete this.data[k]; },
-        },
+        localStorage,
+        sessionStorage,
         window: {
             setInterval: (fn) => { fn(); return 0; },
             clearInterval: () => {},
         },
         google,
-        fetch: () => Promise.reject(new Error('fetch unavailable in test')),
+        fetch: options.fetch || (() => Promise.reject(new Error('fetch unavailable in test'))),
         setTimeout,
         clearTimeout,
     };
     context.window.adaptfully = context.adaptfully;
     context.window.google = google;
+    context.window.localStorage = localStorage;
+    context.window.sessionStorage = sessionStorage;
 
     for (const rel of ['core.js', 'platform.js', 'auth/_helpers.js', 'auth/google-auth.js']) {
         vm.runInNewContext(fs.readFileSync(path.join(runtimeDir, rel), 'utf8'), context);
@@ -80,6 +104,8 @@ function loadGoogleAuthContext(storageData = {}, config = {}) {
 
     return {
         platform: context.adaptfully.get('auth'),
+        localStorage,
+        sessionStorage,
         getTokenPrompt: () => tokenPrompt,
         getInitClientId: () => initClientId,
         getErrors: () => errors,
@@ -124,5 +150,84 @@ describe('google auth', () => {
             assert.equal(result.authenticated, false);
         });
         assert.equal(called, true);
+    });
+
+    it('stores the access token in localStorage by default', async () => {
+        const { platform, localStorage, sessionStorage } = loadGoogleAuthContext(
+            { lastLoggedIn: 'player-123' },
+            {},
+            {
+                onRequestAccessToken(client) {
+                    client.callback({ access_token: 'tok-abc' });
+                },
+                fetch: () => Promise.resolve({
+                    ok: true,
+                    json: async () => ({ sub: 'player-123', email: 'p@example.com' }),
+                }),
+            },
+        );
+
+        await new Promise((resolve) => {
+            platform.login((result) => {
+                assert.equal(result.authenticated, true);
+                resolve();
+            });
+        });
+
+        assert.equal(localStorage.getItem('entanglement_google_token'), 'tok-abc');
+        assert.equal(sessionStorage.getItem('entanglement_google_token'), null);
+    });
+
+    it('migrates a legacy sessionStorage token into localStorage', async () => {
+        const { platform, localStorage, sessionStorage } = loadGoogleAuthContext(
+            { lastLoggedIn: 'player-123' },
+            {},
+            {
+                seedSessionToken: {
+                    key: 'entanglement_google_token',
+                    value: 'legacy-tok',
+                },
+                fetch: () => Promise.resolve({
+                    ok: true,
+                    json: async () => ({ sub: 'player-123', email: 'p@example.com' }),
+                }),
+            },
+        );
+
+        await new Promise((resolve) => {
+            platform.autoLogin((result) => {
+                assert.equal(result.authenticated, true);
+                resolve();
+            });
+        });
+
+        assert.equal(localStorage.getItem('entanglement_google_token'), 'legacy-tok');
+        assert.equal(sessionStorage.getItem('entanglement_google_token'), null);
+    });
+
+    it('honors googleTokenStorage=sessionStorage', async () => {
+        const { platform, localStorage, sessionStorage } = loadGoogleAuthContext(
+            { lastLoggedIn: 'player-123' },
+            { googleTokenStorage: 'sessionStorage' },
+            {
+                onRequestAccessToken(client) {
+                    client.callback({ access_token: 'sess-tok' });
+                },
+                fetch: () => Promise.resolve({
+                    ok: true,
+                    json: async () => ({ sub: 'player-123', email: 'p@example.com' }),
+                }),
+            },
+        );
+
+        await new Promise((resolve) => {
+            platform.login((result) => {
+                assert.equal(result.authenticated, true);
+                resolve();
+            });
+        });
+
+        assert.equal(sessionStorage.getItem('entanglement_google_token'), 'sess-tok');
+        assert.equal(localStorage.getItem('entanglement_google_token'), null);
     });
 });
