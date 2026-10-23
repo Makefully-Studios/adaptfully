@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.0.8 — 2026-10-22
+
+### Fixed
+
+- **Scoped package gameIds** — `buildGameId()` / `sanitizeFsSegment()` flatten `@scope/name` (and `\`) so Yap `gameId`, extract/prebuild folder segments, and saved zip/report names stay single path segments (e.g. `makefully-fancifully-0.1.0`).
+
 ## 5.0.7 — 2026-10-07
 
 ### Added
