@@ -459,10 +459,11 @@ Place two layered PNG files in `./assets/meta/` (packaged as `meta/` in the zip)
 |------|---------|
 | `icon-foreground.png` | Foreground layer (typically the character or subject) |
 | `icon-background.png` | Background layer (typically the scene or environment) |
+| `promo-horizontal.png` | Optional landscape Open Graph / share image (recommended **1200×630**). Also used for landscape Apple startup images when present. |
 
 The build server composites the foreground over the background, applies a binding/logo overlay, and generates the icon sizes each platform needs.
 
-**Recommended format:** 1536×1536 pixel square PNGs for both files. Images with other dimensions are scaled to 1536×1536 automatically, but matching the target size produces the sharpest results.
+**Recommended format:** 1536×1536 pixel square PNGs for both icon layers. Images with other dimensions are scaled to 1536×1536 automatically, but matching the target size produces the sharpest results.
 
 Missing icons do not fail the Adaptfully client: check the `WARNING missing layered icon(s)` log line and replace the placeholders before a store release.
 
