@@ -460,6 +460,7 @@ Place two layered PNG files in `./assets/meta/` (packaged as `meta/` in the zip)
 | `icon-foreground.png` | Foreground layer (typically the character or subject) |
 | `icon-background.png` | Background layer (typically the scene or environment) |
 | `promo-horizontal.png` | Optional landscape Open Graph / share image (recommended **1200×630**). Also used for landscape Apple startup images when present. |
+| `twitter-card.png` (or `.jpg`) | Optional still for X/Twitter **player** cards when `config.twitterCard` is `"player"` (recommended square matching `twitterPlayer` size, e.g. **480×480**). |
 
 The build server composites the foreground over the background, applies a binding/logo overlay, and generates the icon sizes each platform needs.
 
@@ -521,7 +522,9 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `publisherEmailAddress` | Optional | Contact email |
 | `scope` | Web/PWA | Base URL scope for the web app |
 | `themeColor` | Capacitor, Electron, UWP, web | Loading screen / theme color |
-| `twitterId` | Web | Twitter handle for meta tags |
+| `twitterId` | Web/PWA | X/Twitter `@handle` for meta tags (`twitter:site`; **required** when `twitterCard` is `"player"`) |
+| `twitterCard` | Web/PWA | Optional `"player"` for X player cards; default is summary large image |
+| `twitterPlayer` | Web/PWA | Optional `{ url?, width?, height?, image? }` for player cards (defaults: `og:url`, 480×480, `meta/twitter-card.*` or promo) |
 | `deployFolder` | Client | Neutral deploy directory staged before prebuild (default: `deploy`) |
 | `htmlInjections` | Prebuild | Deploy-relative HTML paths to inject (default: `["index.html"]`) |
 | `outputFolder` | Client | Prebuild output root (default: `output`) |
