@@ -141,6 +141,16 @@ Games should call `adaptfully.has('analytics')` before `get` during rollout if o
 | `social-auth` | `adaptfully.register('auth', adaptfully.auth.Social)` | Capacitor (via [@capgo/capacitor-social-login](https://github.com/Cap-go/capacitor-social-login)) |
 | `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local / testing |
 
+### Host plugins
+
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `springroll-host` | `adaptfully.register('host', adaptfully.host.Springroll())` | SpringrollContainer / Bellhop |
+| `car-host` | `adaptfully.register('host', adaptfully.host.Car())` | Capacitor parked games (Android Auto / AAOS; requires `carGames`) |
+| `noop-host` | `adaptfully.register('host', adaptfully.host.Noop())` | Local / no shell |
+
+See [`docs/host.md`](docs/host.md) for the shared host contract and SpringRoll migration notes.
+
 Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy scripts use a path relative to the deploy folder instead:
 
 ```json
@@ -534,7 +544,8 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
 | `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
-| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks` |
+| `platforms.<name>.carGames` | Capacitor + car-host | `true` (Android Auto + AAOS) or `{ androidAuto?, automotive? }` — Wrapfully patches parked-game Android requisites |
+| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `carGames` |
 
 Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
 

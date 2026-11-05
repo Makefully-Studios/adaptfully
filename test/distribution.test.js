@@ -40,13 +40,16 @@ describe('registration assets', () => {
 
     it('exposes standard plugin keys', () => {
         assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), [
+            'car-host',
             'dev-auth',
             'google-auth',
             'http-analytics',
             'indexedDB',
             'localStorage',
             'noop-analytics',
+            'noop-host',
             'social-auth',
+            'springroll-host',
             'steam-auth',
         ]);
     });

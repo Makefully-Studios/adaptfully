@@ -14,6 +14,8 @@ They do not cover which OS builds the artifact.
 | Android | [android.md](./android.md) | `assets/meta/deployments/android/` |
 | Steam | [steam.md](./steam.md) | `assets/meta/deployments/steam/` |
 
+For Android Auto / AAOS parked games (`carGames` + `host: car-host`), see [android.md](./android.md#cars-android-auto--aaos-parked-games) and [`docs/host.md`](../host.md).
+
 ## Helpers
 
 | Command | Writes |

@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.1.0 — 2026-11-05
+
+### Added
+
+- **Host registrations** — `springroll-host`, `car-host`, and `noop-host` expose a shared `adaptfully.get('host')` contract (pause, features, loaded/progress, environment) so games can target SpringrollContainer and Capacitor car shells without branching on Bellhop vs Cap plugins. See [`docs/host.md`](docs/host.md).
+- **`platforms.<name>.carGames`** — control field (`true` or `{ androidAuto, automotive }`) required when registering `car-host`; validated by the Capacitor packager.
+
 ## 5.0.8 — 2026-10-22
 
 ### Fixed

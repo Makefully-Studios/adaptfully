@@ -117,6 +117,27 @@ Copy the downloaded key to `assets/meta/deployments/android/google.json`. Ensure
 - [ ] For Play uploads: `google.json` is present and the service account can access the app
 - [ ] Credential paths are gitignored
 
+## Cars (Android Auto / AAOS parked games)
+
+Optional. Enable on the Capacitor android platform:
+
+```json
+"platforms": {
+  "android": {
+    "packager": "capacitor",
+    "carGames": true,
+    "registrations": {
+      "host": "car-host"
+    }
+  }
+}
+```
+
+- `carGames: true` → both Auto + AAOS; or `{ "androidAuto": true, "automotive": true|false }`.
+- Register `host: "car-host"` and pause audio on `adaptfully.get('host').onPause` — see [`docs/host.md`](../host.md).
+- Wrapfully patches `CAR_LAUNCHER`, `appCategory="game"`, and automotive `uses-feature` (`required="false"` on the mobile track).
+- In Play Console, add **Android Auto** and **Android Automotive OS** form factors, upload to a testing track, and test with the Desktop Head Unit (DHU) + AAOS emulator before open testing.
+
 ## Notes
 
 - Prefer **project-owned** keystores so debug installs stay reproducible across machines.
