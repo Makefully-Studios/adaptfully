@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.1.1 — 2026-11-05
+
+### Added
+
+- **`host.onEnvironment()`** — `car-host` forwards Capacitor CarGames `environment` events (`phone`, `android_auto`, `aaos`) and re-queries `getEnvironment()` on activity resume so a game can restore phone UI while Android Auto stays connected.
+
 ## 5.1.0 — 2026-11-05
 
 ### Added

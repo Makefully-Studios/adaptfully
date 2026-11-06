@@ -181,4 +181,49 @@ describe('car-host', () => {
         assert.deepEqual(pauses.filter((v, i) => i === 0 || v !== pauses[i - 1]), [false, true, false]);
         host.destroy();
     });
+
+    it('forwards environment changes and re-queries on resume', async () => {
+        /** @type {Record<string, Function>} */
+        const carHandlers = {};
+        /** @type {Record<string, Function>} */
+        const appHandlers = {};
+        let environment = 'android_auto';
+        const adaptfully = loadHostPlugin('car-host', {
+            Capacitor: {
+                Plugins: {
+                    CarGames: {
+                        getEnvironment: async () => ({ environment }),
+                        addListener(event, cb) {
+                            carHandlers[event] = cb;
+                            return Promise.resolve({ remove() {} });
+                        },
+                    },
+                    App: {
+                        addListener(event, cb) {
+                            appHandlers[event] = cb;
+                            return Promise.resolve({ remove() {} });
+                        },
+                    },
+                },
+            },
+        });
+
+        const host = adaptfully.host.Car();
+        const seen = [];
+        host.onEnvironment((value) => seen.push(value));
+        carHandlers.environment?.({ environment: 'phone' });
+        environment = 'phone';
+        appHandlers.resume?.();
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+        environment = 'android_auto';
+        appHandlers.resume?.();
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+        assert.deepEqual(seen, ['phone', 'android_auto']);
+        assert.equal(await host.getEnvironment(), 'android_auto');
+        host.destroy();
+    });
 });

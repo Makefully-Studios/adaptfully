@@ -18,6 +18,7 @@ host.onPause((paused) => { /* mute / pause gameplay */ });
 host.onCaptionsMuted?.((muted) => { /* … */ });
 host.onVolume?.('music', (level) => { /* 0–1 */ });
 host.onUxRestrictions?.((info) => { /* car only */ });
+host.onEnvironment?.((environment) => { /* car: phone | android_auto | aaos */ });
 
 host.setFeatures({ sound: true, captions: true });
 host.notifyProgress(0.5, { stage: 'assets' });
@@ -77,7 +78,7 @@ Requires Capacitor packager + `platforms.<key>.carGames` (see Wrapfully README �
 1. Pause gameplay **and audio** when `host.onPause(true)` (activity pause, leave car display, or AAOS UX restrictions).
 2. Do not resume audio until `onPause(false)` / parked again.
 3. Layout for car aspect ratios (avoid heavy pillarboxing on landscape Auto).
-4. Prefer `host.getEnvironment()` over sniffing user agents when you need Auto vs phone vs AAOS.
+4. Prefer `host.getEnvironment()` / `host.onEnvironment()` over sniffing user agents when you need Auto vs phone vs AAOS. `onEnvironment` fires when the activity moves between the car display and the phone, including while Android Auto stays connected. Resume also re-queries `getEnvironment()`.
 
 Wrapfully patches the Android manifest (`CAR_LAUNCHER`, `appCategory="game"`, optional automotive feature) and installs the Cap plugin. Play Console form-factor opt-in (Android Auto + Automotive OS) remains a manual Console step.
 
