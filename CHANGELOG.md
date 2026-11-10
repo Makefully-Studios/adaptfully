@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.1.2 — 2026-11-10
+
+### Fixed
+
+- **Deploy preserveArtifacts** — `adaptfully deploy` no longer deletes `artifacts/` and `wrapfully-build.json` before packaging the prior build extract, so the IPA/AAB survives into the deploy chore.
+- **Apple PKCS#12 export** — `apple-signing` (and iOS credential docs) export `.p12` with PBE-SHA1-3DES + SHA1 MAC so macOS `security import` accepts the passphrase.
+
 ## 5.1.1 — 2026-11-05
 
 ### Added

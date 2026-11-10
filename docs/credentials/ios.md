@@ -104,8 +104,11 @@ Skip this if step 1 already exported `development.p12` / `distribution.p12`.
 ```bash
 # From the folder that has private.key and the downloaded .cer
 openssl x509 -in Certificates.cer -inform DER -out cert.pem -outform PEM
-openssl pkcs12 -export -inkey private.key -in cert.pem -out development.p12
+openssl pkcs12 -export -inkey private.key -in cert.pem -out development.p12 \
+  -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1
 # or distribution.p12 — use the matching kind
+# (AES-256 / SHA-256 PKCS#12 often fails macOS `security import` with a false
+# "wrong password?" MAC error — stick to the classic algorithms above.)
 ```
 
 Move the `.p12` to `assets/meta/deployments/ios/apple/`.

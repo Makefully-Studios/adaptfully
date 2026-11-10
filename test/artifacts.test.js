@@ -86,6 +86,22 @@ describe('artifacts', () => {
         assert.equal(fs.existsSync(path.join(root, 'keep-me.txt')), true);
     });
 
+    it('preserveArtifacts keeps build output and only clears status', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-clear-preserve-'));
+        tmpDirs.push(root);
+        const ipaDir = path.join(root, 'artifacts', 'ios');
+        fs.mkdirSync(ipaDir, { recursive: true });
+        fs.writeFileSync(path.join(ipaDir, 'Game-release.ipa'), 'ipa');
+        fs.writeFileSync(path.join(root, 'wrapfully-build.json'), '{"targets":["ios"]}');
+        fs.writeFileSync(path.join(root, 'wrapfully-status.json'), '{}');
+
+        clearStaleBuildExtract(root, { preserveArtifacts: true });
+
+        assert.equal(fs.existsSync(path.join(ipaDir, 'Game-release.ipa')), true);
+        assert.equal(fs.existsSync(path.join(root, 'wrapfully-build.json')), true);
+        assert.equal(fs.existsSync(path.join(root, 'wrapfully-status.json')), false);
+    });
+
     it('resolves extract roots under output/<platform>/', () => {
         const root = path.resolve('output');
         assert.equal(
