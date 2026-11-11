@@ -206,9 +206,9 @@ describe('packagers', () => {
         packager.validate();
     });
 
-    it('defaults web packager platforms to web, uwp, and pwa', () => {
+    it('defaults web packager platforms to web, uwp, pwa, webos, and lgtv', () => {
         const packager = new WebPackager({});
-        assert.deepEqual(packager.platforms, ['web', 'uwp', 'pwa']);
+        assert.deepEqual(packager.platforms, ['web', 'uwp', 'pwa', 'webos', 'lgtv']);
     });
 });
 

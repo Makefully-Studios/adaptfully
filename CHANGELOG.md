@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.2.0 — 2026-11-11
+
+### Added
+
+- **`device-auth`** — PIN/QR limited-input auth plugin; TV starts/polls, companion completes on the web deploy. See [`docs/device-auth.md`](docs/device-auth.md).
+- **`tv-host`** — lean-back host with Back key + `onDeviceAuth` for PIN/QR chrome.
+- **Web packager** — default platforms include `webos` / `lgtv`; builder family resolves `webos` even with `packager: "web"`.
+
 ## 5.1.2 — 2026-11-10
 
 ### Fixed

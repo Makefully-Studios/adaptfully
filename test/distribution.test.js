@@ -42,6 +42,7 @@ describe('registration assets', () => {
         assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), [
             'car-host',
             'dev-auth',
+            'device-auth',
             'google-auth',
             'http-analytics',
             'indexedDB',
@@ -51,6 +52,13 @@ describe('registration assets', () => {
             'social-auth',
             'springroll-host',
             'steam-auth',
+            'tv-host',
         ]);
+    });
+
+    it('collects device-auth runtime scripts', () => {
+        const assets = resolveRegistrationAssets({ auth: 'device-auth' });
+        assert.ok(assets.runtimeScriptPaths.some((p) => p.endsWith('device-auth.js')));
+        assert.match(assets.inlineScript, /adaptfully\.auth\.Device/);
     });
 });

@@ -195,6 +195,31 @@ describe('registrations', () => {
         });
     });
 
+    it('resolves webos builder family with web packager', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    lgtv: {
+                        packager: 'web',
+                        builder: 'webos',
+                        deployments: ['zip'],
+                    },
+                },
+            },
+        };
+
+        assert.equal(resolveFamilyFromTarget('webos'), 'webos');
+        assert.equal(resolveFamily(['webos'], 'web'), 'webos');
+        assert.deepEqual(resolveBuildSpec('lgtv', pkg), {
+            family: 'webos',
+            targets: ['webos'],
+            platformKey: 'lgtv',
+            steamworks: false,
+            socialLogin: false,
+            deployments: ['zip'],
+        });
+    });
+
     it('defaults android/ios targets to capacitor family', () => {
         assert.equal(resolveFamilyFromTarget('android'), 'capacitor');
         assert.equal(resolveFamily(['android', 'ios']), 'capacitor');

@@ -9,7 +9,7 @@ import { buildAdaptfullyInjection, STANDARD_PLUGINS } from '../lib/node/registra
 const runtimeDir = getRuntimeDir();
 
 /**
- * @param {'springroll-host' | 'car-host' | 'noop-host'} pluginKey
+ * @param {'springroll-host' | 'car-host' | 'noop-host' | 'tv-host'} pluginKey
  * @param {object} [options]
  */
 function loadHostPlugin(pluginKey, options = {}) {
@@ -50,7 +50,7 @@ describe('host registrations', () => {
         assert.match(injection, /registerSpringrollHost/);
     });
 
-    it('injects car-host and noop-host', () => {
+    it('injects car-host, noop-host, and tv-host', () => {
         assert.match(
             buildAdaptfullyInjection({ host: 'car-host' }),
             /adaptfully\.host\.Car\(\)/,
@@ -58,6 +58,10 @@ describe('host registrations', () => {
         assert.match(
             buildAdaptfullyInjection({ host: 'noop-host' }),
             /adaptfully\.host\.Noop\(\)/,
+        );
+        assert.match(
+            buildAdaptfullyInjection({ host: 'tv-host' }),
+            /adaptfully\.host\.Tv\(\)/,
         );
     });
 });
