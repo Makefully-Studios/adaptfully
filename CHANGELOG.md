@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.3.0 — 2026-11-11
+
+### Added
+
+- **Store-assets upload ledger** — `lib/node/store-assets-ledger.js` owns `meta/store-assets/upload-ledger.json` (sequenced SHA-256 set skip for Play/ASC listing sync).
+- **Opt-in listing deploys** — `adaptfully deploy <platform> --deployment *-listing` may target keys not in the platform release fan-out; assets-only zips skip the prior AAB/IPA tree and package `credentialsFrom` sibling folders under `meta/deployments/`.
+
 ## 5.2.0 — 2026-11-11
 
 ### Added
