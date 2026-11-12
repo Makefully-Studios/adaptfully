@@ -16,6 +16,9 @@ They do not cover which OS builds the artifact.
 
 For Android Auto / AAOS parked games (`carGames` + `host: car-host`), see [android.md](./android.md#cars-android-auto--aaos-parked-games) and [`docs/host.md`](../host.md).
 
+For Play / App Store **listing image** sync (`meta/store-assets`, `google-listing` /
+`apple-listing`) and ASC API compliance, see [`docs/store-assets.md`](../store-assets.md).
+
 ## Helpers
 
 | Command | Writes |

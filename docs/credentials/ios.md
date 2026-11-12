@@ -170,10 +170,51 @@ Skip this if you used step 8.
 }
 ```
 
-### 10. Done when
+### 10. App Store Connect API key (listing sync / build numbers)
+
+Required for Wrapfully **`apple-listing`** (Asset Library screenshots/creatives) and
+recommended for automatic iOS build-number bumping.
+
+1. Open [App Store Connect → Users and Access → Integrations → App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api).
+2. Copy the **Issuer ID** → `apiIssuer`.
+3. Generate (or reuse) an API key with permission to manage your apps’ metadata.
+4. Copy the **Key ID** → `apiKeyId`.
+5. Download the `.p8` once → place next to `apple.json` as `AuthKey_<KeyID>.p8`
+   (or set `apiKeyPath`).
+
+Merge into `apple.json` (keep altool `username` / `password` for IPA upload):
+
+```json
+{
+  "apiIssuer": "(Issuer ID)",
+  "apiKeyId": "(Key ID)",
+  "apiKeyPath": "AuthKey_XXXXXXXXXX.p8"
+}
+```
+
+#### App Store Connect API — listing sync
+
+Apple’s ASC API terms allow automation for **your team’s own internal workflow**
+only. You may **not** use the API to provide services to third parties, share
+keys outside your team, or solicit other teams’ credentials.
+
+Wrapfully refuses `apple-listing` unless:
+
+1. Gitignored `apple.json` includes `"ascApiTeamToken": "<secret>"` (never commit this).
+2. The Wrapfully host has the SHA-256 hex of that secret as `ASC_API_TEAM_TOKEN_HASH`
+   or `cred.json` → `ascApiTeamTokenHash`.
+
+That gate keeps ASC listing sync off shared Wrapfully fleets for unauthorized
+repos. Outside adopters still use **their own** ASC API key for **their** apps;
+self-hosted Wrapfully sets its own token hash.
+
+See also [`docs/store-assets.md`](../store-assets.md).
+
+### 11. Done when
 
 - [ ] For `ios-dev`: `apple/development.p12` + `apple/development.mobileprovision`
 - [ ] For App Store: `apple/distribution.p12` + `apple/app-store.mobileprovision` + `apple.json`
+- [ ] For listing sync: ASC API fields + `.p8`, `ascApiTeamToken` in `apple.json`, and matching Wrapfully `ASC_API_TEAM_TOKEN_HASH`
 - [ ] `apple.p12Password` matches the `.p12` passphrase when the passphrase is non-empty
 - [ ] App ID matches `packageName`; Sign in with Apple enabled if you use Capgo Apple auth
 - [ ] Credential paths are gitignored

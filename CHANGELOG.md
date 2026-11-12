@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.3.2 — 2026-11-12
+
+### Added
+
+- **`docs/store-assets.md`** — Play/ASC listing layout, opt-in listing deploys, and App Store Connect API `ascApiTeamToken` / Wrapfully hash compliance for outside adopters.
+- **iOS credentials** — ASC API key steps + listing-sync token terms in `docs/credentials/ios.md`.
+
 ## 5.3.1 — 2026-11-12
 
 ### Added
