@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.3.1 — 2026-11-12
+
+### Added
+
+- Automatic GitHub Releases on `package.json` version bumps (via the Release workflow).
+
 ## 5.3.0 â€” 2026-11-11
 
 ### Added
