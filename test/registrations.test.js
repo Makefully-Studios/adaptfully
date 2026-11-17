@@ -166,6 +166,7 @@ describe('registrations', () => {
             platformKey: 'steam',
             steamworks: true,
             socialLogin: false,
+            webviewCapture: false,
             deployments: ['zip', 'steam'],
         });
     });
@@ -191,6 +192,7 @@ describe('registrations', () => {
             platformKey: 'web',
             steamworks: false,
             socialLogin: false,
+            webviewCapture: false,
             deployments: ['zip', 'web-prod'],
         });
     });
@@ -216,6 +218,7 @@ describe('registrations', () => {
             platformKey: 'lgtv',
             steamworks: false,
             socialLogin: false,
+            webviewCapture: false,
             deployments: ['zip'],
         });
     });
@@ -252,6 +255,30 @@ describe('registrations', () => {
             platformKey: 'android',
             steamworks: false,
             socialLogin: true,
+            webviewCapture: false,
+            deployments: ['zip'],
+        });
+    });
+
+    it('resolves capacitor build spec with webview-capture', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    ios: {
+                        packager: 'capacitor',
+                        registrations: { capture: 'webview-capture' },
+                    },
+                },
+            },
+        };
+
+        assert.deepEqual(resolveBuildSpec('ios', pkg), {
+            family: 'capacitor',
+            targets: ['ios'],
+            platformKey: 'ios',
+            steamworks: false,
+            socialLogin: false,
+            webviewCapture: true,
             deployments: ['zip'],
         });
     });
@@ -260,6 +287,20 @@ describe('registrations', () => {
         const injection = buildAdaptfullyInjection({ auth: 'social-auth' });
         assert.match(injection, /adaptfully\.register\('auth', adaptfully\.auth\.Social\)/);
         assert.match(injection, /registerSocialAuth/);
+    });
+
+    it('builds injection for capture plugins', () => {
+        const webview = buildAdaptfullyInjection({ capture: 'webview-capture' });
+        assert.match(webview, /adaptfully\.register\('capture', adaptfully\.capture\.Webview\(\)\)/);
+        assert.match(webview, /registerWebviewCapture/);
+
+        const electron = buildAdaptfullyInjection({ capture: 'electron-capture' });
+        assert.match(electron, /adaptfully\.register\('capture', adaptfully\.capture\.Electron\(\)\)/);
+        assert.match(electron, /registerElectronCapture/);
+
+        const noop = buildAdaptfullyInjection({ capture: 'noop-capture' });
+        assert.match(noop, /adaptfully\.register\('capture', adaptfully\.capture\.Noop\(\)\)/);
+        assert.match(noop, /registerNoopCapture/);
     });
 
     it('resolves a deployment publish directory under assets/meta/deployments', () => {

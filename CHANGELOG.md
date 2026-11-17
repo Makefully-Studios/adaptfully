@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.4.0 — 2026-11-17
+
+### Added
+
+- **Capture plugins** — `webview-capture` (Capacitor / WKWebView `takeSnapshot`), `electron-capture` (`webContents.capturePage` IPC), and `noop-capture` for Notefully host screenshots via `adaptfully.get('capture').screenshot()`.
+- Electron packager writes capture IPC in `main.js` / `preload.js` when `electron-capture` is registered (merged with steam-auth preload when both are set).
+- `resolveBuildSpec.webviewCapture` when `webview-capture` is registered (Wrapfully installs `@makefully/capacitor-screenshot`).
+
 ## 5.3.3 — 2026-11-17
 
 ### Fixed

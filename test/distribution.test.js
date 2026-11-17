@@ -43,16 +43,19 @@ describe('registration assets', () => {
             'car-host',
             'dev-auth',
             'device-auth',
+            'electron-capture',
             'google-auth',
             'http-analytics',
             'indexedDB',
             'localStorage',
             'noop-analytics',
+            'noop-capture',
             'noop-host',
             'social-auth',
             'springroll-host',
             'steam-auth',
             'tv-host',
+            'webview-capture',
         ]);
     });
 

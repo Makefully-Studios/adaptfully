@@ -269,8 +269,112 @@ describe('prebuild packager templates', () => {
 
         assert.match(main, /electronEnableSteamOverlay/);
         assert.match(main, /preload: path\.join\(__dirname, 'preload\.js'\)/);
+        assert.doesNotMatch(main, /adaptfully:capture-page/);
         assert.match(preload, /steamworks\.js.*init\(719140\)/s);
         assert.match(preload, /__ADAPTFULLY_STEAMWORKS__/);
+        assert.doesNotMatch(preload, /__ADAPTFULLY_CAPTURE__/);
+    });
+
+    it('writes capture IPC in main.js and preload for electron-capture', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-capture-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(path.join(deploy, 'index.html'), '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>');
+
+        const pkg = {
+            config: {
+                platforms: {
+                    desktop: {
+                        packager: 'electron',
+                        registrations: { capture: 'electron-capture' },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'desktop', pkg, { log: () => {} });
+        const main = fs.readFileSync(path.join(dest, 'main.js'), 'utf8');
+        const preload = fs.readFileSync(path.join(dest, 'preload.js'), 'utf8');
+
+        assert.match(main, /ipcMain/);
+        assert.match(main, /adaptfully:capture-page/);
+        assert.match(main, /capturePage/);
+        assert.match(main, /preload: path\.join\(__dirname, 'preload\.js'\)/);
+        assert.match(main, /sandbox: true/);
+        assert.doesNotMatch(main, /electronEnableSteamOverlay/);
+        assert.match(preload, /__ADAPTFULLY_CAPTURE__/);
+        assert.match(preload, /ipcRenderer\.invoke\('adaptfully:capture-page'\)/);
+        assert.doesNotMatch(preload, /__ADAPTFULLY_STEAMWORKS__/);
+    });
+
+    it('merges steam-auth and electron-capture into one preload', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-steam-capture-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(path.join(deploy, 'index.html'), '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>');
+
+        const pkg = {
+            config: {
+                platforms: {
+                    steam: {
+                        packager: 'electron',
+                        steamId: 719140,
+                        registrations: {
+                            auth: 'steam-auth',
+                            capture: 'electron-capture',
+                        },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'steam', pkg, { log: () => {} });
+        const main = fs.readFileSync(path.join(dest, 'main.js'), 'utf8');
+        const preload = fs.readFileSync(path.join(dest, 'preload.js'), 'utf8');
+
+        assert.match(main, /electronEnableSteamOverlay/);
+        assert.match(main, /adaptfully:capture-page/);
+        assert.match(main, /sandbox: false/);
+        assert.match(preload, /__ADAPTFULLY_STEAMWORKS__/);
+        assert.match(preload, /__ADAPTFULLY_CAPTURE__/);
+    });
+
+    it('rejects webview-capture on non-capacitor packager', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    web: {
+                        packager: 'web',
+                        registrations: { capture: 'webview-capture' },
+                    },
+                },
+            },
+        };
+        assert.throws(
+            () => createPackagerForPlatform('web', pkg).validate(),
+            /webview-capture.*capacitor/,
+        );
+    });
+
+    it('rejects electron-capture on non-electron packager', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    ios: {
+                        packager: 'capacitor',
+                        registrations: { capture: 'electron-capture' },
+                    },
+                },
+            },
+        };
+        assert.throws(
+            () => createPackagerForPlatform('ios', pkg).validate(),
+            /electron-capture.*electron/,
+        );
     });
 
     it('does not write main.js for web packager', () => {

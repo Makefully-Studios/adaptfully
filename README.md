@@ -152,6 +152,40 @@ Games should call `adaptfully.has('analytics')` before `get` during rollout if o
 
 See [`docs/host.md`](docs/host.md) for the shared host contract and SpringRoll migration notes.
 
+### Capture plugins
+
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `webview-capture` | `adaptfully.register('capture', adaptfully.capture.Webview())` | Capacitor iOS via Wrapfully `@makefully/capacitor-screenshot` (`WKWebView.takeSnapshot`) |
+| `electron-capture` | `adaptfully.register('capture', adaptfully.capture.Electron())` | Electron / Steam via `webContents.capturePage` IPC (Adaptfully-generated preload) |
+| `noop-capture` | `adaptfully.register('capture', adaptfully.capture.Noop())` | Always `null` — Notefully falls through to DOM/`html-to-image` |
+
+Shared contract:
+
+```js
+const capture = adaptfully.get('capture');
+const dataUrl = await capture.screenshot(); // PNG data URL or null
+```
+
+Wire into [Notefully](https://www.npmjs.com/package/@makefully/notefully) with the host `capture` hook (and optional `onBeforeCapture` to redraw WebGL):
+
+```js
+Notefully.init({
+  // …
+  onBeforeCapture: async () => { engine.render(); },
+  capture: async () => {
+    if (!adaptfully.has('capture')) {
+      return null;
+    }
+    return adaptfully.get('capture').screenshot();
+  },
+});
+```
+
+**`webview-capture` requires `packager: "capacitor"`.** Wrapfully installs the vendored screenshot plugin when `registrations` include `webview-capture` (build spec `webviewCapture: true`). On Android the plugin returns unsupported so Notefully uses DOM capture (no MediaProjection permission sheet).
+
+**`electron-capture` requires `packager: "electron"`.** Prebuild writes `preload.js` (merged with steam-auth when both are registered) and an `ipcMain` handler in `main.js`.
+
 Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy scripts use a path relative to the deploy folder instead:
 
 ```json
@@ -159,15 +193,27 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
   "config": {
     "platforms": {
       "steam": {
+        "packager": "electron",
+        "steamId": 1234567,
         "registrations": {
           "storage": "localStorage",
-          "auth": "steam-auth"
+          "auth": "steam-auth",
+          "capture": "electron-capture"
+        }
+      },
+      "ios": {
+        "packager": "capacitor",
+        "registrations": {
+          "storage": "localStorage",
+          "auth": "social-auth",
+          "capture": "webview-capture"
         }
       },
       "web": {
         "registrations": {
           "storage": "localStorage",
-          "auth": "google-auth"
+          "auth": "google-auth",
+          "capture": "noop-capture"
         }
       },
       "dev": {
@@ -190,7 +236,7 @@ Each platform entry may set a **`packager`** (`web`, `electron`, or `capacitor`)
 | Packager | Prebuild adds |
 |----------|---------------|
 | `web` | `game-config.js` for **web / uwp / pwa** platform prebuilds (version + platform for analytics) |
-| `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** is registered |
+| `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** and/or **`electron-capture`** is registered |
 | `capacitor` | `game-config.js`, Capacitor CSP/viewport; `social-login-config.js` when **`social-auth`** is registered |
 
 Android/iOS Wrapfully builds use the **`capacitor`** builder family. Cordova/PhoneGap is no longer supported.
@@ -546,7 +592,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
 | `platforms.<name>.carGames` | Capacitor + car-host | `true` (Android Auto + AAOS) or `{ androidAuto?, automotive? }` — Wrapfully patches parked-game Android requisites |
-| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `carGames` |
+| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `carGames`, `webviewCapture` |
 
 Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
 

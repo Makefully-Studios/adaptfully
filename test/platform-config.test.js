@@ -54,6 +54,7 @@ describe('platform-config', () => {
         assert.equal(config.packager, undefined);
         assert.equal(config.registrations, undefined);
         assert.ok(PLATFORM_CONTROL_KEYS.has('packager'));
+        assert.ok(PLATFORM_CONTROL_KEYS.has('webviewCapture'));
     });
 
     it('supports getConfigValue helpers', () => {
