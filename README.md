@@ -64,7 +64,8 @@ A **platform** (`config.platforms.<key>`) describes *how* to build — registrat
 - A platform may declare `"deployments": ["<key>", ...]`. Each key maps to a credential folder at `assets/meta/deployments/<key>/`.
 - If a platform has no `deployments` array, the platform key itself is the single default deployment key (so `steam` → `assets/meta/deployments/steam/`).
 - `adaptfully deploy <platform>` prebuilds once, then sends to Wrapfully once per deployment. `--deployment <key>` narrows it to one.
-- Only the selected deployment's folder is shipped in each zip (as `meta/publish/`), so other targets' credentials never travel with a build.
+- `adaptfully release <platform> --deployment <key>` packages only that credential folder, rewrites the uploaded `package.json` deployments list to match, and sets `wrapfully.json` `deploymentKey` so Wrapfully fans out to that key only.
+- Only the selected deployment's folder is shipped in each zip (as `meta/publish/` for deploy, or `meta/deployments/<key>/` for release), so other targets' credentials never travel with a build.
 
 ```json
 "config": {

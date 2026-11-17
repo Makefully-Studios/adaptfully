@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.3.3 — 2026-11-17
+
+### Fixed
+
+- **Scoped release `--deployment`** — `adaptfully release <platform> --deployment <key>` now rewrites the uploaded `package.json` `platforms.<platform>.deployments` list to the packaged key(s) and sets `wrapfully.json` `deploymentKey`, so Wrapfully no longer fans out to sibling deployments that were intentionally omitted from the zip.
+
 ## 5.3.2 — 2026-11-12
 
 ### Added

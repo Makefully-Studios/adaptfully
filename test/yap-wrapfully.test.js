@@ -67,6 +67,25 @@ describe('wrapfully.json job config', () => {
         assert.equal(job.deploymentKey, undefined);
         assert.equal(job.stage, 'build');
     });
+
+    it('buildWrapfullyJobConfig includes deploymentKey for scoped release', () => {
+        const job = buildWrapfullyJobConfig('release', 'pwa', 'g-1.0.0', 'web', 'web-prod');
+
+        assert.deepEqual(job, {
+            stage: 'release',
+            route: 'pwa',
+            platformKey: 'web',
+            gameId: 'g-1.0.0',
+            deploymentKey: 'web-prod',
+        });
+    });
+
+    it('buildWrapfullyJobConfig omits deploymentKey for unscoped release', () => {
+        const job = buildWrapfullyJobConfig('release', 'pwa', 'g-1.0.0', 'web');
+
+        assert.equal(job.deploymentKey, undefined);
+        assert.equal(job.stage, 'release');
+    });
 });
 
 describe('chore envelope', () => {

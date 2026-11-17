@@ -4,6 +4,7 @@ import {
     getConfigValue,
     resolveConfigForBuild,
     resolvePlatformConfig,
+    scopePackageDeployments,
     PLATFORM_CONTROL_KEYS,
 } from '../lib/node/platform-config.js';
 
@@ -74,5 +75,28 @@ describe('platform-config', () => {
             getConfigValue(pkg, 'android-dev', 'packageName'),
             'com.example.demo.dev',
         );
+    });
+
+    it('scopePackageDeployments rewrites only the target platform deployments', () => {
+        const scoped = scopePackageDeployments(
+            {
+                name: 'demo',
+                config: {
+                    platforms: {
+                        web: {
+                            builder: 'pwa',
+                            deployments: ['web-testing', 'web-prod'],
+                        },
+                        steam: { packager: 'electron' },
+                    },
+                },
+            },
+            'web',
+            ['web-prod'],
+        );
+
+        assert.deepEqual(scoped.config.platforms.web.deployments, ['web-prod']);
+        assert.equal(scoped.config.platforms.web.builder, 'pwa');
+        assert.equal(scoped.config.platforms.steam.packager, 'electron');
     });
 });
