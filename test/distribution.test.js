@@ -44,6 +44,7 @@ describe('registration assets', () => {
             'dev-auth',
             'device-auth',
             'electron-capture',
+            'epic-auth',
             'google-auth',
             'http-analytics',
             'indexedDB',

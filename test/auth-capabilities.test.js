@@ -11,7 +11,7 @@ const runtimeDir = getRuntimeDir();
  * @param {string[]} authScripts relative to runtimeDir under auth/
  * @param {string} registerExpr e.g. "adaptfully.register('auth', adaptfully.auth.Google);"
  */
-function loadPlatform(authScripts, registerExpr) {
+function loadPlatform(authScripts, registerExpr, setup) {
     const storage = {
         data: {},
         get(key) { return this.data[key]; },
@@ -69,6 +69,7 @@ function loadPlatform(authScripts, registerExpr) {
     context.adaptfully.register('config', {
         googleClientId: 'test-gis.apps.googleusercontent.com',
     });
+    setup?.(context);
     vm.runInNewContext(registerExpr, context);
 
     return context.adaptfully.get('auth');
@@ -83,6 +84,28 @@ describe('auth capabilities', () => {
         assert.equal(platform.supportsLogout(), true);
         assert.equal(platform.requiresEmail(), true);
         assert.equal(platform.supportsAutoLogin(), true);
+    });
+
+    it('epic does not support logout and does not require email', async () => {
+        const platform = loadPlatform(
+            ['epic-auth.js'],
+            "adaptfully.register('auth', adaptfully.auth.Epic);",
+            (ctx) => {
+                ctx.window.__ADAPTFULLY_EOS__ = {
+                    login: async () => ({ id: 'epic-account', displayName: 'Player' }),
+                };
+            },
+        );
+        assert.equal(platform.supportsLogout(), false);
+        assert.equal(platform.requiresEmail(), false);
+        assert.equal(platform.supportsAutoLogin(), true);
+
+        const result = await new Promise((resolve) => {
+            platform.login(resolve);
+        });
+        assert.equal(result.authenticated, true);
+        assert.equal(result.user.id, 'epic-account');
+        assert.equal(result.user.email, '');
     });
 
     it('steam does not support logout and does not require email', () => {

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.5.0 — 2026-11-19
+
+### Added
+
+- **Epic Games Store** — `epic` / `epic-dev` Electron platforms (Windows + Mac), `epic-publish` (BPT `epic.json`), and `epic-auth` (launcher exchange code, Dev Auth on `epic-dev`) via `eos-bridge.cjs`. `resolveBuildSpec.eos` tells Wrapfully to stage the EOS redistributable.
+
 ## 5.4.1 — 2026-11-19
 
 ### Fixed

@@ -13,6 +13,7 @@ They do not cover which OS builds the artifact.
 | iOS | [ios.md](./ios.md) | `assets/meta/deployments/ios/` |
 | Android | [android.md](./android.md) | `assets/meta/deployments/android/` |
 | Steam | [steam.md](./steam.md) | `assets/meta/deployments/steam/` |
+| Epic Games Store | [epic.md](./epic.md) | `assets/meta/deployments/epic/` |
 
 For Android Auto / AAOS parked games (`carGames` + `host: car-host`), see [android.md](./android.md#cars-android-auto--aaos-parked-games) and [`docs/host.md`](../host.md).
 
@@ -28,6 +29,7 @@ For Play / App Store **listing image** sync (`meta/store-assets`, `google-listin
 | `npx adaptfully apple-signing` | CSR/key work files, `apple/*.p12`, optional `.mobileprovision` + `build.json` `apple.p12Password` |
 | `npx adaptfully apple-publish` | `apple.json` (App Store Connect upload login) |
 | `npx adaptfully steam-publish` | `steam.json` |
+| `npx adaptfully epic-publish` | `epic.json` (BPT client id + secret) |
 
 Each guide lists the **full manual process** and marks **Helper** steps with **skip to step N** when you use a command instead.
 
@@ -42,6 +44,8 @@ Each guide lists the **full manual process** and marks **Helper** steps with **s
 | `ios-sim` | No device signing files |
 | `steam-dev` | None |
 | `steam` upload | `steam.json` |
+| `epic-dev` | None |
+| `epic` upload | `epic.json` |
 
 ## Secrets
 
@@ -51,5 +55,6 @@ Do not commit credential files. Helpers update `.gitignore` with Adaptfully patt
 - `assets/meta/deployments/**/google.json`
 - `assets/meta/deployments/**/apple.json`
 - `assets/meta/deployments/**/steam.json`
+- `assets/meta/deployments/**/epic.json`
 - `assets/meta/deployments/**/android/`
 - `assets/meta/deployments/**/apple/`

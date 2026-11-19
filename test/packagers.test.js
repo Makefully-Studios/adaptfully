@@ -11,6 +11,7 @@ import {
     normalizeSocialLoginConfig,
     resolvePlatformPackager,
     usesSocialAuth,
+    usesEpicAuth,
     usesSteamAuth,
     validatePlatformPackager,
     validateSocialLoginConfig,
@@ -39,6 +40,11 @@ describe('packagers', () => {
         assert.equal(usesSteamAuth({ auth: 'google-auth' }), false);
     });
 
+    it('detects epic-auth in registrations', () => {
+        assert.equal(usesEpicAuth({ auth: 'epic-auth' }), true);
+        assert.equal(usesEpicAuth({ auth: 'steam-auth' }), false);
+    });
+
     it('detects social-auth in registrations', () => {
         assert.equal(usesSocialAuth({ auth: 'social-auth' }), true);
         assert.equal(usesSocialAuth({ auth: 'google-auth' }), false);
@@ -57,6 +63,41 @@ describe('packagers', () => {
                 },
             }),
             /packager is "web"/,
+        );
+    });
+
+    it('throws when epic-auth is used without electron packager', () => {
+        assert.throws(
+            () => validatePlatformPackager('epic', {
+                config: {
+                    platforms: {
+                        epic: {
+                            eosProductId: 'p',
+                            eosSandboxId: 's',
+                            eosDeploymentId: 'd',
+                            eosClientId: 'c',
+                            registrations: { auth: 'epic-auth' },
+                        },
+                    },
+                },
+            }),
+            /packager is "web"/,
+        );
+    });
+
+    it('throws when epic-auth is missing EOS ids', () => {
+        assert.throws(
+            () => validatePlatformPackager('epic', {
+                config: {
+                    platforms: {
+                        epic: {
+                            packager: 'electron',
+                            registrations: { auth: 'epic-auth' },
+                        },
+                    },
+                },
+            }),
+            /missing eosProductId, eosSandboxId, eosDeploymentId, eosClientId/,
         );
     });
 
@@ -273,6 +314,44 @@ describe('prebuild packager templates', () => {
         assert.match(preload, /steamworks\.js.*init\(719140\)/s);
         assert.match(preload, /__ADAPTFULLY_STEAMWORKS__/);
         assert.doesNotMatch(preload, /__ADAPTFULLY_CAPTURE__/);
+    });
+
+    it('writes main.js, preload.js, and eos-bridge.cjs for epic-auth', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-epic-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(path.join(deploy, 'index.html'), '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>');
+
+        const pkg = {
+            config: {
+                platforms: {
+                    epic: {
+                        packager: 'electron',
+                        eos: true,
+                        eosProductId: 'prod',
+                        eosSandboxId: 'sandbox',
+                        eosDeploymentId: 'deploy',
+                        eosClientId: 'eos-client',
+                        registrations: { auth: 'epic-auth' },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'epic', pkg, { log: () => {} });
+        const main = fs.readFileSync(path.join(dest, 'main.js'), 'utf8');
+        const preload = fs.readFileSync(path.join(dest, 'preload.js'), 'utf8');
+
+        assert.equal(fs.existsSync(path.join(dest, 'eos-bridge.cjs')), true);
+        assert.match(main, /eos-bridge\.cjs/);
+        assert.match(main, /sandbox: false/);
+        assert.match(main, /"productId":"prod"/);
+        assert.doesNotMatch(main, /electronEnableSteamOverlay/);
+        assert.match(preload, /__ADAPTFULLY_EOS__/);
+        assert.match(preload, /adaptfully:eos-login/);
+        assert.doesNotMatch(preload, /__ADAPTFULLY_STEAMWORKS__/);
     });
 
     it('writes capture IPC in main.js and preload for electron-capture', () => {

@@ -33,6 +33,7 @@ adaptfully release android --encrypt          # optional envelope encryption
 adaptfully release steam,android,ios          # sequential platforms; each → output/<platform>/
 adaptfully release --platforms steam,android  # same, flag form
 adaptfully steam-publish                      # one-time: log in with steamcmd → assets/meta/deployments/steam/steam.json
+adaptfully epic-publish                       # one-time: BPT client id/secret → assets/meta/deployments/epic/epic.json
 ```
 
 | Stage | What it does |
@@ -42,6 +43,7 @@ adaptfully steam-publish                      # one-time: log in with steamcmd �
 | `deploy` | Submit a Yap deploy chore with the prior build artifact + deployment credentials |
 | `release` | Yap release chore (build + configured deployments on Wrapfully) |
 | `steam-publish` | One-time local setup: install steamcmd, interactive login, write the `steam` deployment's `steam.json` (also updates `.gitignore`) |
+| `epic-publish` | One-time local setup: write the `epic` deployment's BPT `epic.json` (also updates `.gitignore`) |
 | `google-publish` | One-time local setup: import a Play Console service-account JSON into the `android` deployment folder (also updates `.gitignore`) |
 | `apple-publish` | One-time local setup: write App Store Connect credentials into the `ios` deployment folder (also updates `.gitignore`) |
 | `android-keystore` | One-time local setup: generate debug/release keystores and write `android` `build.json` (also updates `.gitignore`) |
@@ -139,6 +141,7 @@ Games should call `adaptfully.has('analytics')` before `get` during rollout if o
 |------------|--------------|---------|
 | `google-auth` | `adaptfully.register('auth', adaptfully.auth.Google)` | Web (Google Identity Services) |
 | `steam-auth` | `adaptfully.register('auth', adaptfully.auth.Steam)` | Steam / Electron (via [steamworks.js](https://github.com/ceifa/steamworks.js)) |
+| `epic-auth` | `adaptfully.register('auth', adaptfully.auth.Epic)` | Epic Games Store / Electron (launcher exchange code, or Dev Auth on `epic-dev`) |
 | `social-auth` | `adaptfully.register('auth', adaptfully.auth.Social)` | Capacitor (via [@capgo/capacitor-social-login](https://github.com/Cap-go/capacitor-social-login)) |
 | `dev-auth` | `adaptfully.register('auth', adaptfully.auth.Dev)` | Local / testing |
 
@@ -311,6 +314,23 @@ The renderer `steam-auth` plugin reads the Steam ID from that bridge. When Steam
 |-----|---------|---------|
 | `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the Steam ID on login |
 | `steamReadyTimeoutMs` | `10000` | Max wait when a bridge exists but identity is not yet ready |
+
+#### Epic auth (`epic-auth`)
+
+When `epic-auth` is registered on an **`electron`** platform, Adaptfully prebuild writes:
+
+- **`main.js`** — Electron shell with `sandbox: false` and `eos-bridge.cjs` installed (EOS product, sandbox, deployment, and client ids)
+- **`eos-bridge.cjs`** — main-process bridge. Production reads Epic Games Launcher args (`-epicuserid=`, `-AUTH_TYPE=exchangecode`, `-AUTH_PASSWORD=`). `epic-dev` uses Dev Auth (`127.0.0.1:6300`) when a staged EOS login helper is present, otherwise `EOS_DEV_ACCOUNT_ID` or `userData/eos-dev-identity.json`
+- **`preload.js`** — exposes `window.__ADAPTFULLY_EOS__`
+
+The renderer plugin `autoLogin()` resolves `{ id, email: '' }`. `supportsLogout()` is `false` and `requiresEmail()` is `false`. Required platform fields: `eosProductId`, `eosSandboxId`, `eosDeploymentId`, `eosClientId`. Those are EOS SDK ids, not the BPT client secret in `epic.json`.
+
+`epic` / `epic-dev` default builders are `win`+`mac` and `win-dev`+`mac-dev` (no Linux). Set `eos: true` so Wrapfully stages the EOS redistributable. `win` / `mac` builder names still map to the Steam platform; use the `epic` platform key for Epic.
+
+| Key | Default | Purpose |
+|-----|---------|---------|
+| `autoLoginStorageKey` | `lastLoggedIn` | Storage key written with the Epic account id on login |
+| `eosReadyTimeoutMs` | `10000` | Max wait when a bridge exists but identity is not yet ready |
 
 #### Social auth (`social-auth`)
 
@@ -504,7 +524,7 @@ mygame/
                 └── steam.json
 ```
 
-The selected deployment's folder is shipped as `meta/publish/` in the zip, so per-platform credential file names (`build.json`, `sftp.json`, `s3.json`, `showfully.json`, `steam.json`, `apple.json`, `google.json`, `ms.json`, `android/`, `ms/`) live inside `assets/meta/deployments/<key>/`.
+The selected deployment's folder is shipped as `meta/publish/` in the zip, so per-platform credential file names (`build.json`, `sftp.json`, `s3.json`, `showfully.json`, `steam.json`, `epic.json`, `apple.json`, `google.json`, `ms.json`, `android/`, `ms/`) live inside `assets/meta/deployments/<key>/`.
 
 Icons (`icon-foreground.png`, `icon-background.png`) are required for mobile, desktop, and Steam builds. If either file is missing from `assets/meta/`, Adaptfully **warns** and ships packaged placeholder icons for that build so Wrapfully can still run.
 
@@ -590,9 +610,14 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.builders` | wrapfully-deploy | Map additional Wrapfully builder names to a platform |
 | `platforms.<name>.packager` | Prebuild | `web` (default), `electron`, or `capacitor` — selects the packager class that adds platform-specific files during prebuild |
 | `platforms.<name>.steamId` | Electron + steam-auth | Steamworks app ID baked into `preload.js` (client). Upload app IDs belong in the Steam deployment `manifest.json` |
+| `platforms.<name>.eos` | Electron + Epic | When true, Wrapfully stages the EOS redistributable. Also implied for platform keys `epic` / `epic-dev` |
+| `platforms.<name>.eosProductId` | Electron + epic-auth | EOS product id baked into `eos-bridge.cjs` |
+| `platforms.<name>.eosSandboxId` | Electron + epic-auth | EOS sandbox id |
+| `platforms.<name>.eosDeploymentId` | Electron + epic-auth | EOS deployment id |
+| `platforms.<name>.eosClientId` | Electron + epic-auth | EOS SDK client id (not the BPT client id) |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
 | `platforms.<name>.carGames` | Capacitor + car-host | `true` (Android Auto + AAOS) or `{ androidAuto?, automotive? }` — Wrapfully patches parked-game Android requisites |
-| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `carGames`, `webviewCapture` |
+| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `eos`, `eosProductId`, `eosSandboxId`, `eosDeploymentId`, `eosClientId`, `carGames`, `webviewCapture` |
 
 Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
 
@@ -777,6 +802,34 @@ For Steamworks / `steam-auth` client builds, set `platforms.<name>.steamId`. For
 Steam builds can run on either the Windows or Mac server. The server that receives the request builds its own platforms and requests the rest from the other server (Windows builds `win` and requests `mac`/`linux`; Mac builds `mac`/`linux` and requests `win`). Install the Steamworks SDK ContentBuilder on any server that will upload to Steam.
 
 When builds relay between servers, `meta/publish/` credentials travel in the zip with the game payload.
+
+#### Epic Games Store (`epic`, `epic-dev`)
+
+First-time setup: [docs/credentials/epic.md](docs/credentials/epic.md) (`epic-publish`).
+
+`epic-dev` builds debug Electron binaries for Windows and Mac without uploading. No `epic.json` is required. `epic` builds those two release targets and uploads each with BuildPatchTool. There is no Linux Epic target. `win` / `mac` still route to Steam; Epic uses the `epic` platform key.
+
+For release uploads, run **`adaptfully epic-publish`** once. It writes `assets/meta/deployments/epic/epic.json`:
+
+```json
+{
+  "clientId": "(BPT Client ID — not the EOS SDK client id)",
+  "clientSecret": "(BPT Client Secret)"
+}
+```
+
+And a tracked `manifest.json` (fill any ids you did not pass as flags):
+
+```json
+{
+  "type": "epic",
+  "organizationId": "(Epic organization id)",
+  "productId": "(Epic product id)",
+  "artifactId": "(Epic artifact id)"
+}
+```
+
+One artifact id covers Windows and Mac. Wrapfully uploads them as `{version}-win` and `{version}-mac`. Mac builds keep Apple signing/notarization when `apple.json` is present (unlike Steamworks). Install BuildPatchTool under `./BuildPatchTool/` on the Wrapfully host. Optional EOS redistributables go in `./EOS/SDK/` or `meta/eos/`.
 
 #### Electron (`win`, `win-dev`, `mac`, `mac-dev`, `linux`, `linux-dev`, `steam`, `steam-dev`)
 

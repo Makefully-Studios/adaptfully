@@ -165,10 +165,41 @@ describe('registrations', () => {
             targets: ['win', 'mac', 'linux'],
             platformKey: 'steam',
             steamworks: true,
+            eos: false,
             socialLogin: false,
             webviewCapture: false,
             deployments: ['zip', 'steam'],
         });
+    });
+
+    it('defaults epic targets to win/mac and sets eos', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    epic: {
+                        packager: 'electron',
+                        registrations: { auth: 'epic-auth' },
+                        deployments: ['zip', 'epic'],
+                    },
+                    'epic-dev': {
+                        packager: 'electron',
+                    },
+                },
+            },
+        };
+
+        assert.deepEqual(resolveBuildSpec('epic', pkg), {
+            family: 'electron',
+            targets: ['win', 'mac'],
+            platformKey: 'epic',
+            steamworks: false,
+            eos: true,
+            socialLogin: false,
+            webviewCapture: false,
+            deployments: ['zip', 'epic'],
+        });
+        assert.deepEqual(resolveBuildSpec('epic-dev', pkg).targets, ['win-dev', 'mac-dev']);
+        assert.equal(resolveBuildSpec('epic-dev', pkg).eos, true);
     });
 
     it('resolves pwa builder family with web packager', () => {
@@ -191,6 +222,7 @@ describe('registrations', () => {
             targets: ['pwa'],
             platformKey: 'web',
             steamworks: false,
+            eos: false,
             socialLogin: false,
             webviewCapture: false,
             deployments: ['zip', 'web-prod'],
@@ -217,6 +249,7 @@ describe('registrations', () => {
             targets: ['webos'],
             platformKey: 'lgtv',
             steamworks: false,
+            eos: false,
             socialLogin: false,
             webviewCapture: false,
             deployments: ['zip'],
@@ -254,6 +287,7 @@ describe('registrations', () => {
             targets: ['android'],
             platformKey: 'android',
             steamworks: false,
+            eos: false,
             socialLogin: true,
             webviewCapture: false,
             deployments: ['zip'],
@@ -277,6 +311,7 @@ describe('registrations', () => {
             targets: ['ios'],
             platformKey: 'ios',
             steamworks: false,
+            eos: false,
             socialLogin: false,
             webviewCapture: true,
             deployments: ['zip'],
