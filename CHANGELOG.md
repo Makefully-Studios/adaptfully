@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.4.1 — 2026-11-19
+
+### Fixed
+
+- **Smaller Wrapfully chores** — `meta/store-assets` is omitted from build/release/binary-deploy zips and included only for `google-listing` / `apple-listing` deploys (often ~200MB of screenshots that binary builds never use).
+
 ## 5.4.0 — 2026-11-17
 
 ### Added

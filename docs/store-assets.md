@@ -1,7 +1,11 @@
 # Store listing assets (`meta/store-assets`)
 
-Play Console and App Store Connect listing images ship in the game zip as
-`meta/store-assets/` (source: `assets/meta/store-assets/`).
+Play Console and App Store Connect listing images live under
+`assets/meta/store-assets/` and ship in the Yap chore zip as `meta/store-assets/`.
+
+Adaptfully packs `meta/store-assets` **only** for listing deploy chores
+(`google-listing` / `apple-listing`). Normal `build`, `release`, and binary
+`deploy` zips omit that tree so Capacitor/Electron chores stay small.
 
 Wrapfully syncs them via opt-in deployers:
 
