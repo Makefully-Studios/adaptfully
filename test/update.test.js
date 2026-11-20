@@ -161,6 +161,30 @@ describe('update plugins', () => {
         assert.equal(reloaded, false); // reload waits for controllerchange
     });
 
+    it('pwa-update does not poll by default', async () => {
+        const intervals = [];
+        const update = loadUpdatePlugin('pwa-update', {
+            location: { reload() {} },
+            setInterval(fn, ms) {
+                intervals.push(ms);
+                return 1;
+            },
+            clearInterval() {},
+            document: { visibilityState: 'visible', addEventListener() {} },
+            navigator: {
+                serviceWorker: {
+                    getRegistration: async () => null,
+                    addEventListener() {},
+                },
+            },
+        });
+        assert.equal(typeof update.startPeriodicCheck, 'function');
+        assert.equal(intervals.length, 0);
+        update.startPeriodicCheck(60_000);
+        assert.deepEqual(intervals, [60_000]);
+        update.stopPeriodicCheck();
+    });
+
     it('pwa-update emits downloading then ready on updatefound', async () => {
         const installing = {
             state: 'installing',

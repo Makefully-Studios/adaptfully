@@ -211,9 +211,16 @@ await update.check();
 if (update.getStatus().state === 'ready') {
   await update.applyAndReload(); // posts SKIP_WAITING, reloads on controllerchange
 }
+
+// Opt-in periodic check (default off — existing PWAs that only call Pwa() are unchanged).
+update.startPeriodicCheck(15 * 60 * 1000);
+// or at registration time:
+// adaptfully.register('update', adaptfully.update.Pwa({ checkIntervalMs: 900_000 }));
 ```
 
-**PWA service workers** must honor `postMessage({ type: 'SKIP_WAITING' })` by calling `self.skipWaiting()` (then typically `clients.claim()`). Optional download progress can be sent to the page as `{ type: 'ADAPTFULLY_UPDATE_PROGRESS', progress: 0..1 }`.
+**PWA service workers** must honor `postMessage({ type: 'SKIP_WAITING' })` by calling `self.skipWaiting()` (then typically `clients.claim()`). Wrapfully’s `worker.js` template does this. Optional download progress can be sent to the page as `{ type: 'ADAPTFULLY_UPDATE_PROGRESS', progress: 0..1 }`.
+
+Periodic checks skip hidden tabs and do not auto-reload; games should drive Update / Reload UI from `status` events.
 
 Games should call `adaptfully.has('update')` before `get` during rollout if older builds may omit the registration. Prefer `pwa-update` on web/PWA platforms and `noop-update` elsewhere until an Electron updater is wired.
 

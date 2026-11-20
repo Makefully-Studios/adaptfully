@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.6.2 — 2026-11-20
+
+### Added
+
+- **Opt-in periodic PWA update checks** — `adaptfully.update.Pwa({ checkIntervalMs })` and `update.startPeriodicCheck(ms)` / `stopPeriodicCheck()`. Default remains no polling so existing PWAs are unchanged. Skips hidden tabs; does not auto-reload.
+
+### Fixed
+
+- **PWA update check** — wait for an installing worker after `registration.update()` before reporting idle.
+
 ## 5.6.0 — 2026-11-20
 
 ### Added
