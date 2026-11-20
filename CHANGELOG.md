@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.6.0 — 2026-11-20
+
+### Added
+
+- **Update plugins** — `pwa-update` and `noop-update` expose a shared `adaptfully.get('update')` channel (`check`, `getStatus`, `applyAndReload`, `on('status')`) for PWA service-worker updates. Waiting workers activate via `postMessage({ type: 'SKIP_WAITING' })`.
+
 ## 5.5.0 — 2026-11-19
 
 ### Added

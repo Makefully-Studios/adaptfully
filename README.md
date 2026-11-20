@@ -189,6 +189,34 @@ Notefully.init({
 
 **`electron-capture` requires `packager: "electron"`.** Prebuild writes `preload.js` (merged with steam-auth when both are registered) and an `ipcMain` handler in `main.js`.
 
+### Update plugins
+
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `pwa-update` | `adaptfully.register('update', adaptfully.update.Pwa())` | Service-worker update check / apply for PWA shells |
+| `noop-update` | `adaptfully.register('update', adaptfully.update.Noop())` | Always `unsupported` (Electron / shells without in-app updates yet) |
+
+Shared contract:
+
+```js
+const update = adaptfully.get('update');
+
+update.on('status', (status) => {
+  // status.state: unsupported | idle | checking | downloading | ready | error
+  // status.progress?: 0..1
+  // status.error?: string
+});
+
+await update.check();
+if (update.getStatus().state === 'ready') {
+  await update.applyAndReload(); // posts SKIP_WAITING, reloads on controllerchange
+}
+```
+
+**PWA service workers** must honor `postMessage({ type: 'SKIP_WAITING' })` by calling `self.skipWaiting()` (then typically `clients.claim()`). Optional download progress can be sent to the page as `{ type: 'ADAPTFULLY_UPDATE_PROGRESS', progress: 0..1 }`.
+
+Games should call `adaptfully.has('update')` before `get` during rollout if older builds may omit the registration. Prefer `pwa-update` on web/PWA platforms and `noop-update` elsewhere until an Electron updater is wired.
+
 Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy scripts use a path relative to the deploy folder instead:
 
 ```json

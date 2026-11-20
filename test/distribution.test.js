@@ -52,6 +52,8 @@ describe('registration assets', () => {
             'noop-analytics',
             'noop-capture',
             'noop-host',
+            'noop-update',
+            'pwa-update',
             'social-auth',
             'springroll-host',
             'steam-auth',
