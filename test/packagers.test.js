@@ -422,6 +422,73 @@ describe('prebuild packager templates', () => {
         assert.match(preload, /__ADAPTFULLY_CAPTURE__/);
     });
 
+    it('writes files IPC in main.js and preload for electron-files', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-files-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(path.join(deploy, 'index.html'), '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>');
+
+        const pkg = {
+            config: {
+                platforms: {
+                    desktop: {
+                        packager: 'electron',
+                        registrations: { files: 'electron-files' },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'desktop', pkg, { log: () => {} });
+        const main = fs.readFileSync(path.join(dest, 'main.js'), 'utf8');
+        const preload = fs.readFileSync(path.join(dest, 'preload.js'), 'utf8');
+
+        assert.match(main, /dialog/);
+        assert.match(main, /ipcMain/);
+        assert.match(main, /adaptfully:files-open/);
+        assert.match(main, /adaptfully:files-save/);
+        assert.match(main, /showOpenDialog/);
+        assert.match(main, /showSaveDialog/);
+        assert.match(main, /sandbox: true/);
+        assert.match(preload, /__ADAPTFULLY_FILES__/);
+        assert.match(preload, /adaptfully:files-open/);
+        assert.match(preload, /adaptfully:files-save/);
+    });
+
+    it('merges electron-files with electron-capture into one preload', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'adaptfully-files-capture-'));
+        const deploy = path.join(tmp, 'deploy');
+        const outputRoot = path.join(tmp, 'output');
+        fs.mkdirSync(deploy, { recursive: true });
+        fs.writeFileSync(path.join(deploy, 'index.html'), '<html><head><!-- adaptfully --><!-- /adaptfully --></head><body></body></html>');
+
+        const pkg = {
+            config: {
+                platforms: {
+                    desktop: {
+                        packager: 'electron',
+                        registrations: {
+                            capture: 'electron-capture',
+                            files: 'electron-files',
+                        },
+                    },
+                },
+                outputFolder: outputRoot,
+            },
+        };
+
+        const dest = prebuildPlatform(deploy, 'desktop', pkg, { log: () => {} });
+        const main = fs.readFileSync(path.join(dest, 'main.js'), 'utf8');
+        const preload = fs.readFileSync(path.join(dest, 'preload.js'), 'utf8');
+
+        assert.match(main, /adaptfully:capture-page/);
+        assert.match(main, /adaptfully:files-open/);
+        assert.match(preload, /__ADAPTFULLY_CAPTURE__/);
+        assert.match(preload, /__ADAPTFULLY_FILES__/);
+    });
+
     it('rejects webview-capture on non-capacitor packager', () => {
         const pkg = {
             config: {
@@ -453,6 +520,40 @@ describe('prebuild packager templates', () => {
         assert.throws(
             () => createPackagerForPlatform('ios', pkg).validate(),
             /electron-capture.*electron/,
+        );
+    });
+
+    it('rejects electron-files on non-electron packager', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    ios: {
+                        packager: 'capacitor',
+                        registrations: { files: 'electron-files' },
+                    },
+                },
+            },
+        };
+        assert.throws(
+            () => createPackagerForPlatform('ios', pkg).validate(),
+            /electron-files.*electron/,
+        );
+    });
+
+    it('rejects capacitor-files on non-capacitor packager', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    web: {
+                        packager: 'web',
+                        registrations: { files: 'capacitor-files' },
+                    },
+                },
+            },
+        };
+        assert.throws(
+            () => createPackagerForPlatform('web', pkg).validate(),
+            /capacitor-files.*capacitor/,
         );
     });
 

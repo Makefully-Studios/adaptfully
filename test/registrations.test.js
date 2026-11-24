@@ -168,6 +168,7 @@ describe('registrations', () => {
             eos: false,
             socialLogin: false,
             webviewCapture: false,
+            filePicker: false,
             deployments: ['zip', 'steam'],
         });
     });
@@ -196,6 +197,7 @@ describe('registrations', () => {
             eos: true,
             socialLogin: false,
             webviewCapture: false,
+            filePicker: false,
             deployments: ['zip', 'epic'],
         });
         assert.deepEqual(resolveBuildSpec('epic-dev', pkg).targets, ['win-dev', 'mac-dev']);
@@ -225,6 +227,7 @@ describe('registrations', () => {
             eos: false,
             socialLogin: false,
             webviewCapture: false,
+            filePicker: false,
             deployments: ['zip', 'web-prod'],
         });
     });
@@ -252,6 +255,7 @@ describe('registrations', () => {
             eos: false,
             socialLogin: false,
             webviewCapture: false,
+            filePicker: false,
             deployments: ['zip'],
         });
     });
@@ -290,6 +294,7 @@ describe('registrations', () => {
             eos: false,
             socialLogin: true,
             webviewCapture: false,
+            filePicker: false,
             deployments: ['zip'],
         });
     });
@@ -314,6 +319,32 @@ describe('registrations', () => {
             eos: false,
             socialLogin: false,
             webviewCapture: true,
+            filePicker: false,
+            deployments: ['zip'],
+        });
+    });
+
+    it('resolves capacitor build spec with capacitor-files', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    ios: {
+                        packager: 'capacitor',
+                        registrations: { files: 'capacitor-files' },
+                    },
+                },
+            },
+        };
+
+        assert.deepEqual(resolveBuildSpec('ios', pkg), {
+            family: 'capacitor',
+            targets: ['ios'],
+            platformKey: 'ios',
+            steamworks: false,
+            eos: false,
+            socialLogin: false,
+            webviewCapture: false,
+            filePicker: true,
             deployments: ['zip'],
         });
     });
@@ -336,6 +367,24 @@ describe('registrations', () => {
         const noop = buildAdaptfullyInjection({ capture: 'noop-capture' });
         assert.match(noop, /adaptfully\.register\('capture', adaptfully\.capture\.Noop\(\)\)/);
         assert.match(noop, /registerNoopCapture/);
+    });
+
+    it('builds injection for files plugins', () => {
+        const web = buildAdaptfullyInjection({ files: 'web-files' });
+        assert.match(web, /adaptfully\.register\('files', adaptfully\.files\.Web\(\)\)/);
+        assert.match(web, /registerWebFiles/);
+
+        const electron = buildAdaptfullyInjection({ files: 'electron-files' });
+        assert.match(electron, /adaptfully\.register\('files', adaptfully\.files\.Electron\(\)\)/);
+        assert.match(electron, /registerElectronFiles/);
+
+        const capacitor = buildAdaptfullyInjection({ files: 'capacitor-files' });
+        assert.match(capacitor, /adaptfully\.register\('files', adaptfully\.files\.Capacitor\(\)\)/);
+        assert.match(capacitor, /registerCapacitorFiles/);
+
+        const noop = buildAdaptfullyInjection({ files: 'noop-files' });
+        assert.match(noop, /adaptfully\.register\('files', adaptfully\.files\.Noop\(\)\)/);
+        assert.match(noop, /registerNoopFiles/);
     });
 
     it('resolves a deployment publish directory under assets/meta/deployments', () => {

@@ -189,6 +189,39 @@ Notefully.init({
 
 **`electron-capture` requires `packager: "electron"`.** Prebuild writes `preload.js` (merged with steam-auth when both are registered) and an `ipcMain` handler in `main.js`.
 
+### Files plugins
+
+| Plugin key | Registration | Runtime |
+|------------|--------------|---------|
+| `web-files` | `adaptfully.register('files', adaptfully.files.Web())` | Browser `<input type="file">`; save via `showSaveFilePicker` or download fallback |
+| `electron-files` | `adaptfully.register('files', adaptfully.files.Electron())` | Electron `dialog.showOpenDialog` / `showSaveDialog` via Adaptfully-generated preload IPC |
+| `capacitor-files` | `adaptfully.register('files', adaptfully.files.Capacitor())` | Capawesome FilePicker for open; Filesystem + Share for save/export |
+| `noop-files` | `adaptfully.register('files', adaptfully.files.Noop())` | Always `null` |
+
+Shared contract (system dialogs only — no drag-and-drop):
+
+```js
+const files = adaptfully.get('files');
+
+// Cancel → null
+const opened = await files.open({
+  types: ['application/json', 'image/*'],
+  multiple: false,
+});
+// { files: [{ name, mimeType, size, blob }] }
+
+const saved = await files.save({
+  name: 'export.json',
+  mimeType: 'application/json',
+  blob, // Blob | ArrayBuffer | Uint8Array
+});
+// { name } on success; null if cancelled / unsupported
+```
+
+**`electron-files` requires `packager: "electron"`.** Prebuild merges files IPC into the same `preload.js` / `main.js` as steam-auth, capture, and EOS when those are also registered.
+
+**`capacitor-files` requires `packager: "capacitor"`.** Wrapfully installs `@capawesome/capacitor-file-picker`, `@capacitor/filesystem`, and `@capacitor/share` when `registrations` include `capacitor-files` (build spec `filePicker: true`). Save writes to cache then shares so the user can export / “Save to Files”.
+
 ### Update plugins
 
 | Plugin key | Registration | Runtime |
@@ -236,7 +269,8 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
         "registrations": {
           "storage": "localStorage",
           "auth": "steam-auth",
-          "capture": "electron-capture"
+          "capture": "electron-capture",
+          "files": "electron-files"
         }
       },
       "ios": {
@@ -244,14 +278,16 @@ Use plugin keys in `config.platforms.<platform>.registrations`. Custom deploy sc
         "registrations": {
           "storage": "localStorage",
           "auth": "social-auth",
-          "capture": "webview-capture"
+          "capture": "webview-capture",
+          "files": "capacitor-files"
         }
       },
       "web": {
         "registrations": {
           "storage": "localStorage",
           "auth": "google-auth",
-          "capture": "noop-capture"
+          "capture": "noop-capture",
+          "files": "web-files"
         }
       },
       "dev": {
@@ -274,7 +310,7 @@ Each platform entry may set a **`packager`** (`web`, `electron`, or `capacitor`)
 | Packager | Prebuild adds |
 |----------|---------------|
 | `web` | `game-config.js` for **web / uwp / pwa** platform prebuilds (version + platform for analytics) |
-| `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`** and/or **`electron-capture`** is registered |
+| `electron` | `main.js` (Electron shell); `preload.js` when **`steam-auth`**, **`electron-capture`**, **`electron-files`**, and/or **`epic-auth`** is registered |
 | `capacitor` | `game-config.js`, Capacitor CSP/viewport; `social-login-config.js` when **`social-auth`** is registered |
 
 Android/iOS Wrapfully builds use the **`capacitor`** builder family. Cordova/PhoneGap is no longer supported.
@@ -652,7 +688,7 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.eosClientId` | Electron + epic-auth | EOS SDK client id (not the BPT client id) |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
 | `platforms.<name>.carGames` | Capacitor + car-host | `true` (Android Auto + AAOS) or `{ androidAuto?, automotive? }` — Wrapfully patches parked-game Android requisites |
-| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `eos`, `eosProductId`, `eosSandboxId`, `eosDeploymentId`, `eosClientId`, `carGames`, `webviewCapture` |
+| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `eos`, `eosProductId`, `eosSandboxId`, `eosDeploymentId`, `eosClientId`, `carGames`, `webviewCapture`, `filePicker` |
 
 Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
 

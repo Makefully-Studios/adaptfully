@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.7.0 — 2026-11-24
+
+### Added
+
+- **Files plugins** — `web-files`, `electron-files`, `capacitor-files`, and `noop-files` expose `adaptfully.get('files').open()` / `.save()` (cancel → `null`; opened bytes as `Blob`).
+- Electron packager writes open/save dialog IPC in `main.js` / `preload.js` when `electron-files` is registered (merged with steam-auth / capture / EOS when combined).
+- `resolveBuildSpec.filePicker` when `capacitor-files` is registered (Wrapfully installs Capawesome FilePicker + Capacitor Filesystem/Share).
+
 ## 5.6.2 — 2026-11-20
 
 ### Added

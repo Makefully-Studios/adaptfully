@@ -40,10 +40,12 @@ describe('registration assets', () => {
 
     it('exposes standard plugin keys', () => {
         assert.deepEqual(Object.keys(STANDARD_PLUGINS).sort(), [
+            'capacitor-files',
             'car-host',
             'dev-auth',
             'device-auth',
             'electron-capture',
+            'electron-files',
             'epic-auth',
             'google-auth',
             'http-analytics',
@@ -51,6 +53,7 @@ describe('registration assets', () => {
             'localStorage',
             'noop-analytics',
             'noop-capture',
+            'noop-files',
             'noop-host',
             'noop-update',
             'pwa-update',
@@ -58,6 +61,7 @@ describe('registration assets', () => {
             'springroll-host',
             'steam-auth',
             'tv-host',
+            'web-files',
             'webview-capture',
         ]);
     });
