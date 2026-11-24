@@ -56,6 +56,7 @@ describe('platform-config', () => {
         assert.ok(PLATFORM_CONTROL_KEYS.has('packager'));
         assert.ok(PLATFORM_CONTROL_KEYS.has('webviewCapture'));
         assert.ok(PLATFORM_CONTROL_KEYS.has('filePicker'));
+        assert.ok(PLATFORM_CONTROL_KEYS.has('electronPackaging'));
     });
 
     it('supports getConfigValue helpers', () => {

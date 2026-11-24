@@ -688,7 +688,8 @@ Standard npm fields (`name`, `version`, `description`) are used directly. Add a 
 | `platforms.<name>.eosClientId` | Electron + epic-auth | EOS SDK client id (not the BPT client id) |
 | `platforms.<name>.socialLogin` | Capacitor + social-auth | Capgo provider config (`providers`, `google.webClientId`, `apple.clientId`, optional `defaultProvider`) |
 | `platforms.<name>.carGames` | Capacitor + car-host | `true` (Android Auto + AAOS) or `{ androidAuto?, automotive? }` — Wrapfully patches parked-game Android requisites |
-| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `eos`, `eosProductId`, `eosSandboxId`, `eosDeploymentId`, `eosClientId`, `carGames`, `webviewCapture`, `filePicker` |
+| `platforms.<name>.electronPackaging` | Electron | `"dir"` (default) or `"installer"` — installer yields portable `.exe` / `.dmg` / `.AppImage` for direct download; Steam/Epic always stay on `dir` |
+| `platforms.<name>.<configField>` | Build/deploy | Overrides the matching top-level `config.*` default for that platform only (e.g. `platforms.android.packageName`, `platforms.ios.title`). Does not apply to control fields: `packager`, `registrations`, `builder`, `builders`, `deployments`, `steamId`, `socialLogin`, `steamworks`, `eos`, `eosProductId`, `eosSandboxId`, `eosDeploymentId`, `eosClientId`, `carGames`, `webviewCapture`, `filePicker`, `electronPackaging` |
 
 Top-level `config.*` values are **defaults**. Any non-control field on `config.platforms.<name>` overrides the default when that platform is built or deployed. Example:
 
@@ -736,16 +737,18 @@ Each builder name becomes a path segment on the server. Some builds require a sp
 | `ios` | Release iOS (.ipa) |
 | `ios-dev` | Debug iOS (.ipa) |
 | `ios-sim` | iOS Simulator (.app) |
-| `mac` | Release Mac (.app) |
-| `mac-dev` | Debug Mac (.app) with DevTools |
-| `win` | Windows portable (.exe) |
-| `win-dev` | Debug Windows portable with DevTools |
-| `linux` | Linux build |
-| `linux-dev` | Debug Linux build with DevTools |
+| `mac` | Unpacked Mac `.app` tree (default); `.dmg` when `electronPackaging: "installer"` |
+| `mac-dev` | Debug Mac `.app` tree with DevTools |
+| `win` | Unpacked Windows Electron dir (default); portable `.exe` when `electronPackaging: "installer"` |
+| `win-dev` | Debug Windows unpacked dir with DevTools |
+| `linux` | Unpacked Linux Electron dir (default); `.AppImage` when `electronPackaging: "installer"` |
+| `linux-dev` | Debug Linux unpacked dir with DevTools |
 | `uwp` | Universal Windows Package |
 | `webapp` | Service-worker web app (optionally SFTP deploy) |
-| `steam` | Windows + Mac + Linux, uploads to Steam |
-| `steam-dev` | Debug Windows + Mac + Linux, no Steam upload |
+| `steam` | Windows + Mac + Linux unpacked trees, uploads to Steam |
+| `steam-dev` | Debug Windows + Mac + Linux unpacked trees, no Steam upload |
+
+For direct-download desktop builds (not Steam/Epic depots), set `platforms.<name>.electronPackaging` to `"installer"` so Wrapfully produces portable `.exe` / `.dmg` / `.AppImage`. Steamworks and EOS platforms always keep unpacked `dir` output for depot packaging. Dev targets (`*-dev`) stay unpacked even when installer mode is set.
 
 For a single platform, pass the specific builder name.
 
@@ -981,7 +984,7 @@ To sign the app, place your certificate at `assets/meta/deployments/<deployment>
 
 ## Response
 
-The server responds with a zip stream containing build artifacts (`.apk`, `.aab`, `.ipa`, `.app`, `.exe`, etc.) and optional status files. By default the client extracts this into `./output/<platform>/`. Use a non-`extract` mode value to save the raw response zip instead.
+The server responds with a zip stream containing build artifacts (`.apk`, `.aab`, `.ipa`, unpacked Electron trees by default, or `.exe`/`.dmg`/`.AppImage` when `electronPackaging: "installer"`, etc.) and optional status files. By default the client extracts this into `./output/<platform>/`. Use a non-`extract` mode value to save the raw response zip instead.
 
 Every build also includes `wrapfully-status.json` with structured `success`, `warn`, and `error` events. The client prints these after extraction and exits with code 1 if any errors were reported, so build failures do not crash the server silently.
 

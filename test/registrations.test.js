@@ -169,6 +169,7 @@ describe('registrations', () => {
             socialLogin: false,
             webviewCapture: false,
             filePicker: false,
+            electronPackaging: 'dir',
             deployments: ['zip', 'steam'],
         });
     });
@@ -198,10 +199,27 @@ describe('registrations', () => {
             socialLogin: false,
             webviewCapture: false,
             filePicker: false,
+            electronPackaging: 'dir',
             deployments: ['zip', 'epic'],
         });
         assert.deepEqual(resolveBuildSpec('epic-dev', pkg).targets, ['win-dev', 'mac-dev']);
         assert.equal(resolveBuildSpec('epic-dev', pkg).eos, true);
+        assert.equal(resolveBuildSpec('epic-dev', pkg).electronPackaging, 'dir');
+    });
+
+    it('resolves installer electronPackaging for plain desktop platforms', () => {
+        const pkg = {
+            config: {
+                platforms: {
+                    desktop: {
+                        packager: 'electron',
+                        builder: ['win', 'mac', 'linux'],
+                        electronPackaging: 'installer',
+                    },
+                },
+            },
+        };
+        assert.equal(resolveBuildSpec('desktop', pkg).electronPackaging, 'installer');
     });
 
     it('resolves pwa builder family with web packager', () => {
@@ -228,6 +246,7 @@ describe('registrations', () => {
             socialLogin: false,
             webviewCapture: false,
             filePicker: false,
+            electronPackaging: 'dir',
             deployments: ['zip', 'web-prod'],
         });
     });
@@ -256,6 +275,7 @@ describe('registrations', () => {
             socialLogin: false,
             webviewCapture: false,
             filePicker: false,
+            electronPackaging: 'dir',
             deployments: ['zip'],
         });
     });
@@ -295,6 +315,7 @@ describe('registrations', () => {
             socialLogin: true,
             webviewCapture: false,
             filePicker: false,
+            electronPackaging: 'dir',
             deployments: ['zip'],
         });
     });
@@ -320,6 +341,7 @@ describe('registrations', () => {
             socialLogin: false,
             webviewCapture: true,
             filePicker: false,
+            electronPackaging: 'dir',
             deployments: ['zip'],
         });
     });
@@ -345,6 +367,7 @@ describe('registrations', () => {
             socialLogin: false,
             webviewCapture: false,
             filePicker: true,
+            electronPackaging: 'dir',
             deployments: ['zip'],
         });
     });

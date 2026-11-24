@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 5.8.0 — 2026-11-24
+
+### Added
+
+- **`platforms.<name>.electronPackaging`** — `"installer"` asks Wrapfully for portable `.exe` / `.dmg` / `.AppImage` (Electron only). Default `"dir"` keeps unpacked trees; Steam/Epic stay on `dir`. Documented in the builder output table.
+
 ## 5.7.0 — 2026-11-24
 
 ### Added
